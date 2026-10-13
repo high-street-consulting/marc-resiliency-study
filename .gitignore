@@ -1,0 +1,13 @@
+scratch.gdb/
+build/
+tests/output/
+data/downloads/
+__pycache__/
+.ipynb_checkpoints/
+data/
+knowledge/
+node_modules/
+dist/
+.idea/
+.vscode/
+build/publish/

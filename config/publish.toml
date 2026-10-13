@@ -1,0 +1,42 @@
+# Paths are relative to the repo root unless absolute.
+
+aprx = 'C:\Users\AhjungKim\Documents\ArcGIS\Projects\MARC Resiliency Study\MARC Resiliency Study.aprx'
+map = "MARC Resiliency Study"
+portal_folder = "MARC Resiliency Study"
+# "private", "org" or "everyone".
+sharing = "org"
+overwrite = true
+staging_dir = "build/publish"
+credits = "Mid-America Regional Council (MARC) Transportation Resilience Phase 2"
+access = "MARC project data. Contact MARC GIS for use outside the project."
+
+[[services]]
+name = "MARC_Resilience_Phase2_Network"
+summary = "MARC Transportation Resilience Phase 2 road networks and NBI bridges."
+description = "Stranded zone network (OSM analysis graph), vulnerability assessment network (Tier 1 scored network) and National Bridge Inventory bridges for the MARC Transportation Resilience Phase 2 study."
+tags = ["MARC", "resilience", "transportation"]
+# Default symbology source; layers are matched to it by display name. A layer may set its own lyrx.
+lyrx = "data/OneDrive_1_10-13-2026/MARC_Resilience_Phase2_gdb/MARC_Resilience_Phase2.lyrx"
+layers = [
+  { path = "data/OneDrive_1_10-13-2026/MARC_Resilience_Phase2_gdb/MARC_Resilience_Phase2.gdb/Stranded_Zone_Network/stranded_zone_network", name = "Stranded zone network" },
+  { path = "data/OneDrive_1_10-13-2026/MARC_Resilience_Phase2_gdb/MARC_Resilience_Phase2.gdb/Tier1_Assets/vulnerability_assessment_network", name = "Vulnerability assessment network" },
+  { path = "data/OneDrive_1_10-13-2026/MARC_Resilience_Phase2_gdb/MARC_Resilience_Phase2.gdb/Tier1_Assets/bridges_nbi", name = "Bridges (NBI)" },
+]
+
+[[services]]
+name = "MARC_Resilience_Phase2_Reference"
+summary = "MARC region county boundaries."
+description = "County boundaries for the MARC Transportation Resilience Phase 2 study."
+tags = ["MARC", "resilience", "boundaries"]
+layers = [ { path = "data/OneDrive_1_10-13-2026/MARC_Resilience_Phase2_gdb/MARC_Resilience_Phase2.gdb/Analytical_Inputs/county_boundaries", name = "Counties" } ]
+
+[webmap]
+title = "MARC Resilience Explorer"
+basemap = "gray-vector"
+sharing = "everyone"
+# section = group layer in the app catalog; entries are layer display names from [[services]]
+sections = [
+  { name = "Networks",  layers = ["Vulnerability assessment network", "Stranded zone network"] },
+  { name = "Assets",    layers = ["Bridges (NBI)"] },
+  { name = "Reference", layers = ["Counties"] },
+]

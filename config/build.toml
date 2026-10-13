@@ -1,0 +1,74 @@
+# Paths are relative to the repo root unless absolute.
+
+[paths]
+source_gdb = "data/OneDrive_1_10-13-2026/MARC_Resilience_Phase2_gdb/MARC_Resilience_Phase2.gdb"
+build_gdb = "build/MARC_Resilience_Phase2_build.gdb"
+deliverable_gdb = "build/MARC_Resilience_Phase2.gdb"
+graph_pickle = "build/osm_graph.pkl"
+# Blank -> arcpy.env.scratchGDB, and intermediates are deleted after each run.
+scratch_gdb = "scratch.gdb"
+keep_intermediates = true
+
+[inputs]
+pbf = [
+  "data/downloads/geofabrik/kansas-261012.osm.pbf",
+  "data/downloads/geofabrik/missouri-261012.osm.pbf",
+]
+hpms_gdb = "data/downloads/hpms/hpms_2024.gdb"
+hpms_layers = { KS = "HPMS_FULL_KS_2024", MO = "HPMS_FULL_MO_2024" }
+acs_csv = "data/downloads/acs/acs5_2024_b01001_tracts.csv"
+study_area = "Analytical_Inputs/county_boundaries"
+
+[crs]
+# MARC standard: NAD 83 State Plane Missouri West, US feet (WKID 102698).
+# The plan text said 102697, which is Missouri Central. Confirm feet vs meters with MARC GIS.
+wkid = 102698
+
+[osm]
+highway = [
+  "motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link",
+  "secondary", "secondary_link", "tertiary", "tertiary_link", "unclassified",
+  "residential", "living_street", "road",
+]
+drop_access = ["private", "no"]
+drop_service = ["parking_aisle", "driveway"]
+min_giant_share = 0.997
+
+[hpms]
+merge_min_mi = 0.05
+span_tolerance = 0.05
+tier1_f_system_max = 6
+ramp_facility_type = 4
+# Event tables built from the wide HPMS layer, besides the split drivers in segmentation_items.csv.
+event_items = ["urban_id", "routenumber", "routesigning", "nhfn"]
+# Sample-panel items attached to sections by length-weighted measure overlap.
+sample_items = ["iri", "speed_limit", "psr", "cracking_percent"]
+
+[linkage]
+radius_m = { freeway = 35, arterial = 20, other = 15 }
+freeway = ["motorway", "motorway_link", "trunk", "trunk_link"]
+arterial = ["primary", "primary_link", "secondary", "secondary_link"]
+bearing_deg = 20
+span_tolerance = 0.15
+# HPMS Facility_Type codes treated as directional (one carriageway of a divided road).
+directional_facility_types = [1, 6]
+
+[conflation]
+locate_radius_m = 30
+spatial_radius_m = 20
+low_coverage = 0.5
+
+[analysis]
+depth_threshold_ft = 0.5
+# Table with edge_id + flood_depth_ft_<scenario> columns for OSM edges. Not yet delivered (ICF keys on Tier 1 asset_id).
+edge_depth_table = ""
+centrality_k = 500
+seed = 42
+haz_table = "HAZ_vulnerability_assessment_network"
+# One entry per scenario; the HAZ column is flood_depth_ft_rp<rp>_<year>_<ssp> (year "cur" has no ssp).
+scenarios = [
+  { return_period = 100, year = "2050", ssp = "ssp245" },
+  { return_period = 100, year = "2070", ssp = "ssp245" },
+  { return_period = 100, year = "2050", ssp = "ssp585" },
+  { return_period = 100, year = "2070", ssp = "ssp585" },
+]

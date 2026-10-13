@@ -1,0 +1,427 @@
+@import './tokens.css';
+
+/* ── Reset & base ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+body {
+  background: #fff;
+  font-family: var(--sc-font);
+  color: var(--sc-text);
+}
+a {
+  color: var(--sc-blue-deep);
+}
+a:hover {
+  color: var(--sc-navy);
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c9c9c9;
+}
+::-webkit-scrollbar-track {
+  background: var(--sc-ground);
+}
+
+/* Buttons and inputs reset to the design language */
+button {
+  font-family: var(--sc-font);
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+}
+input,
+select,
+textarea {
+  font-family: var(--sc-font);
+}
+
+/* Visible focus everywhere (WCAG 2.4.7). 2px ring in brand blue with offset. */
+:focus-visible {
+  outline: 2px solid var(--sc-blue-deep);
+  outline-offset: 1px;
+}
+/* On dark chrome the blue ring is invisible — use white there. */
+.on-dark :focus-visible,
+.on-dark:focus-visible {
+  outline-color: #fff;
+}
+
+/* Screen-reader-only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip link (WCAG 2.4.1) */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  z-index: 200;
+  background: #fff;
+  color: var(--sc-navy);
+  padding: 8px 14px;
+  font: 600 12.5px/1 var(--sc-font);
+  border: 2px solid var(--sc-blue-deep);
+}
+.skip-link:focus {
+  left: 8px;
+  top: 8px;
+}
+
+/* Motion discipline: 150ms ease-in-out micro-interactions; honor reduced motion */
+.caret {
+  transition: transform 150ms ease-in-out;
+}
+
+/* Brand lock-up in the header, which is also the "start over" link. Reads as
+   the logo, not as a link: no underline, inherited colour, a slight lift on
+   hover for affordance. */
+.sc-brand {
+  display: flex;
+  align-items: center;
+  flex: none;
+  text-decoration: none;
+  color: inherit;
+}
+.sc-brand:hover {
+  opacity: 0.85;
+}
+
+/* Highest-need rows: a full-width button that still reads as a list row. */
+.sc-need-row {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--sc-track);
+  background: none;
+  padding: 9px 10px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-align: start;
+  cursor: pointer;
+}
+.sc-need-row:hover:not(:disabled) {
+  background: var(--sc-surface-blue);
+}
+.sc-need-row:disabled {
+  cursor: default;
+}
+
+/* Busy ring, shown while the analysis layer redraws after a rescore. Under
+   reduced motion the ring stops turning, so the label beside it — not the
+   animation — is what carries the state. */
+.sc-spinner {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border: 2.5px solid var(--sc-track);
+  border-top-color: var(--sc-blue-deep);
+  border-radius: 50%;
+  animation: sc-spin 700ms linear infinite;
+}
+@keyframes sc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* Esri view chrome */
+.esri-view .esri-attribution {
+  font-size: 10px;
+}
+/* Widget panels that open over the map — the basemap gallery, search results —
+   have to clear the legend card. The card is a later sibling of the map
+   container, and .esri-ui ships at z-index 0, so without this the card wins the
+   tie on DOM order and covers whatever the panel is showing. */
+.esri-view .esri-ui {
+  z-index: 1;
+}
+
+/* Native range inputs in the design accent */
+input[type='range'] {
+  accent-color: var(--sc-blue-deep);
+}
+
+/* ── Shared primitives ── */
+.sc-btn {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--sc-input-border);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 400 12.5px/1 var(--sc-font);
+  color: var(--sc-text);
+  background: #fff;
+  border-radius: 2px;
+}
+.sc-btn:hover {
+  background: var(--sc-ground);
+}
+.sc-btn--outline-brand {
+  border-color: var(--sc-blue-deep);
+  color: var(--sc-blue-deep);
+  font-weight: 600;
+}
+.sc-btn--outline-brand:hover {
+  background: var(--sc-surface-blue);
+}
+.sc-btn--solid {
+  background: var(--sc-blue-deep);
+  border-color: var(--sc-blue-deep);
+  color: #fff;
+  font-weight: 600;
+}
+.sc-btn--solid:hover {
+  background: #757575;
+}
+.sc-btn--small {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 11.5px;
+}
+.sc-link-btn {
+  font: 400 11px/1 var(--sc-font);
+  color: var(--sc-blue-deep);
+}
+.sc-link-btn:hover {
+  text-decoration: underline;
+}
+.sc-select {
+  height: 32px;
+  border: 1px solid var(--sc-input-border);
+  background: #fff;
+  padding: 0 8px;
+  font: 400 12.5px/1 var(--sc-font);
+  color: var(--sc-text);
+  border-radius: 2px;
+}
+.sc-overline {
+  font: 700 9.5px/1 var(--sc-font);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--sc-gray-dark);
+}
+.sc-card {
+  background: #fff;
+  border: 1px solid var(--sc-card-border);
+  display: flex;
+  flex-direction: column;
+}
+.sc-icon {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  flex: none;
+}
+
+/* Custom radio (native input, styled ring) */
+.sc-radio {
+  display: flex;
+  gap: 9px;
+  cursor: pointer;
+  align-items: flex-start;
+}
+.sc-radio input[type='radio'] {
+  appearance: none;
+  margin: 1px 0 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  border: 1.5px solid var(--sc-gray-dark);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  cursor: pointer;
+}
+.sc-radio input[type='radio']:checked {
+  border-color: var(--sc-blue-deep);
+}
+.sc-radio input[type='radio']:checked::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--sc-blue-deep);
+}
+.sc-radio input[type='radio']:disabled {
+  border-color: var(--sc-gray-light);
+  cursor: not-allowed;
+}
+
+/* Custom checkbox */
+.sc-check {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border: 1.5px solid var(--sc-gray-dark);
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0;
+}
+.sc-check:checked {
+  border-color: var(--sc-blue-deep);
+  background: var(--sc-blue-deep);
+}
+.sc-check:checked::after {
+  content: '';
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translateY(-1px);
+}
+.sc-check--sm {
+  width: 15px;
+  height: 15px;
+}
+
+/* Pill */
+.sc-pill {
+  flex: none;
+  max-width: 170px;
+  height: 20px;
+  padding: 0 9px;
+  border-radius: 9999px;
+  background: var(--sc-surface-blue);
+  border: 1px solid var(--sc-surface-blue-border);
+  display: inline-flex;
+  align-items: center;
+  font: 600 10.5px/1 var(--sc-font);
+  color: var(--sc-blue-deep);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Meter track/fill */
+.sc-meter {
+  height: 8px;
+  background: var(--sc-track);
+}
+.sc-meter > div {
+  height: 100%;
+  background: var(--sc-blue-deep);
+}
+
+/* Error / notice blocks */
+.sc-error {
+  border-inline-start: 4px solid var(--sc-orange);
+  background: #fff4f4;
+  padding: 10px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sc-error b {
+  font: 600 12px/1.3 var(--sc-font);
+  color: var(--sc-text);
+}
+.sc-error span {
+  font: 400 11.5px/1.45 var(--sc-font);
+  color: var(--sc-text-mid);
+}
+.sc-notice {
+  border-inline-start: 4px solid var(--sc-blue-deep);
+  background: var(--sc-surface-blue);
+  padding: 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Modal scrim per design tokens */
+dialog::backdrop {
+  background: rgba(20, 20, 20, 0.55);
+}
+
+/* AA: placeholders must meet 4.5:1 like other text */
+::placeholder {
+  color: #6e6f73;
+  opacity: 1;
+}
+
+/* Live legend (Esri Legend widget restyled into the design card) */
+.sc-live-legend {
+  max-height: 42vh;
+  max-width: 250px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.sc-live-legend .esri-legend {
+  background: transparent;
+  padding: 0;
+  width: auto !important;
+  font-family: var(--sc-font);
+}
+.sc-live-legend .esri-widget {
+  font-family: var(--sc-font);
+  font-size: 11px;
+  color: var(--sc-text-mid);
+}
+.sc-live-legend .esri-legend__service {
+  padding: 4px 0 6px;
+}
+.sc-live-legend .esri-legend__layer-caption {
+  font-size: 10px;
+  color: var(--sc-gray-dark);
+  padding: 2px 0;
+}
+.sc-live-legend .esri-legend__service-label {
+  font: 600 11.5px/1.25 var(--sc-font);
+  color: var(--sc-text);
+  padding-bottom: 2px;
+}
+.sc-live-legend .esri-legend__layer-cell--symbols {
+  min-width: 34px;
+}
+.sc-live-legend .esri-legend__layer-row {
+  min-height: 18px;
+}
+
+/* Weights modal on small screens: rail stacks above the sliders */
+@media (max-width: 667px) {
+  .sc-weights-body {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .sc-weights-rail {
+    width: 100% !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--sc-card-border);
+  }
+}

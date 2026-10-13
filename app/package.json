@@ -1,0 +1,27 @@
+{
+  "name": "marc-resilience-explorer",
+  "private": true,
+  "version": "0.1.0",
+  "description": "MARC Transportation Resilience Explorer — public map-based data catalog for the MARC Transportation Resilience Phase 2 study (Kansas City region)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit"
+  },
+  "dependencies": {
+    "@arcgis/core": "5.1.15",
+    "@esri/calcite-components": "5.1.2",
+    "@esri/calcite-components-react": "5.1.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.0"
+  }
+}

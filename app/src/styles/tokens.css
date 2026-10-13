@@ -1,0 +1,40 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   MARC design tokens — a brand layer over Esri Calcite.
+   Placeholder derived from marc.org until MARC sends brand assets.
+   The --sc-* names are kept from the upstream app this was forked from; only values change.
+   ────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* Color */
+  --sc-navy: #b30838; /* header, footer, chips — MARC crimson */
+  --sc-blue-deep: #b30838; /* links, primary buttons, focus, selected, bars */
+  --sc-blue-brand: #31787d; /* fills and graphics only — MARC teal */
+  --sc-blue-60: #69bfcc; /* subordinate bars — MARC light teal */
+  --sc-orange: #d7ba5c; /* accents, notices — MARC gold; never behind white text */
+  --sc-gray-dark: #6e6f73; /* secondary type, captions — holds 4.5:1 on the ground (WCAG 2.1 AA 1.4.3) */
+  --sc-gray-light: #acacad; /* region borders */
+  --sc-surface-blue: #e9f5f7; /* active rows, selected tools, pills */
+  --sc-surface-blue-border: #bfe0e6;
+  --sc-card-border: #d4d4d4; /* cards, panels */
+  --sc-input-border: #949494; /* fields and buttons — darker than card borders */
+  --sc-hairline: #e6e6e6;
+  --sc-track: #f0f0f0; /* chart tracks */
+  --sc-ground: #f3f2f2; /* bars, section headers */
+  --sc-text: #171717;
+  --sc-text-mid: #555;
+
+  /* Type — marc.org's Typekit faces are licensed; Roboto is its open fallback */
+  --sc-font: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  /* Shadow */
+  --sc-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.08);
+  --sc-shadow-modal: 0 4px 20px rgba(0, 0, 0, 0.08), 0 12px 32px -2px rgba(0, 0, 0, 0.1);
+
+  /* Calcite re-points (Calcite as the underlying design system) */
+  --calcite-color-brand: #b30838;
+  --calcite-color-brand-hover: #757575;
+  --calcite-color-brand-press: #8a0629;
+  --calcite-color-text-link: #b30838;
+  --calcite-font-family: var(--sc-font);
+  --calcite-corner-radius: 2px;
+  --calcite-color-focus: #b30838;
+}

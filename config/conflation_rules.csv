@@ -1,0 +1,10 @@
+rule_id,enabled,source,layer,key,route_field,from_field,to_field,value_field,attr,method,note
+kdot_county_aadt,1,KDOT county and city AADT,Criticality_Inputs/traffic_counts_kdot_county_city,lrs_locate,RouteID,,,AADTCount,aadt_kdot_county,mean,"Same 16-char Route_ID as HPMS KS, no measures: endpoints located on the route once"
+nhfn,1,BTS NTAD National Highway Freight Network,Criticality_Inputs/freight_nhfn_phfs,lrs,ROUTEID,BEGMP,ENDMP,NHFN_CODE,nhfn_code,majority,"ARNOLD 2019 IDs; KS 11-char ID + 00000 = HPMS 2024 ID; measures are 2019 vintage"
+kdot_pavement,1,KDOT pavement (MARC RTP atlas 44),Sensitivity/pavement_condition_kdot,kdot_keyid,KEYID_1,,,PL,pav_cond_kdot,majority,"KEYID_1 parsed to county, prefix, route, direction, bmp, emp; crosswalk unverified"
+nbi_condition,1,FHWA NBI,Tier1_Assets/bridges_nbi,nbi,,,,DECK_COND_058;SUPERSTRUCTURE_COND_059;SUBSTRUCTURE_COND_060;CULVERT_COND_062,nbi_min_cond,min,"Lowest of deck, superstructure, substructure, culvert; route from items 3/5B/5D verified by snap, else nearest route with same number, else nearest"
+modot_lettered_aadt,0,MoDOT lettered-route AADT,,lrs,,,,,aadt_modot_lettered,mean,Not yet received
+marc_fc,0,MARC functional class,,spatial,,,,,marc_fc,majority,Source layer not in the delivered gdb
+modot_pavement,1,MoDOT pavement (MARC RTP atlas 45),Sensitivity/pavement_condition_modot,spatial_dedupe,,,,FHWA_CONDITION,pav_cond_modot,majority,Paired-direction duplicate geometries dropped first
+ug_pci,1,Unified Government pavement,Sensitivity/pavement_condition_unified_government,spatial,,,,Pavement_Condition_Index,pci_ug,mean,
+shawnee_paser,1,City of Shawnee pavement (PASER),Sensitivity/pavement_condition_shawnee,spatial,,,,Paser_Rating,paser_shawnee,mean,
