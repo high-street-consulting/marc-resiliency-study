@@ -237,17 +237,20 @@ export default function App() {
           onOpenTable={openTable}
         />
       </div>
+      <div className="marc-bands" aria-hidden />
       <footer
         style={{
           height: 30,
           flex: 'none',
-          background: 'var(--sc-navy)',
+          background: '#000',
           display: 'flex',
           alignItems: 'center',
+          gap: 12,
           padding: '0 16px',
         }}
       >
-        <div style={{ font: '400 10px/1.3 var(--sc-font)', color: 'rgba(255,255,255,.8)' }}>{ATTRIBUTION}</div>
+        <img src="./marc-logo-white.svg" alt="Mid-America Regional Council" style={{ height: 16, width: 'auto' }} />
+        <div style={{ font: '400 10px/1.3 var(--sc-font)', color: 'rgba(255,255,255,.65)' }}>{ATTRIBUTION}</div>
       </footer>
 
       <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />

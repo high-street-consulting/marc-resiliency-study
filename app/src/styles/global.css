@@ -108,6 +108,14 @@ textarea {
   opacity: 0.85;
 }
 
+/* marc.org's four-band stripe (teal, gold, crimson, sky), 8px, above the header
+   and the footer. One gradient instead of four divs. */
+.marc-bands {
+  flex: none;
+  height: 8px;
+  background: linear-gradient(90deg, #71adb1 0 25%, #d7ba5c 25% 50%, #b30838 50% 75%, #8fc2e1 75%);
+}
+
 /* Highest-need rows: a full-width button that still reads as a list row. */
 .sc-need-row {
   width: 100%;
