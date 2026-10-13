@@ -4,74 +4,300 @@
       "title": "Transportation Resiliency KC",
       "blurb": "MARC's initiative to make the region's roads, bridges, transit and other critical infrastructure more durable and adaptable to extreme weather and other disruptions.",
       "items": [
-        { "title": "Transportation Resiliency KC project page", "url": "https://www.marc.org/transportation-resiliency-kc", "kind": "Project", "desc": "Program overview, Phase 1 results and the Phase 2 Transportation Resilience Improvement Plan (TRIP)." },
-        { "title": "Transportation Resilience Explorer", "url": "./explorer/", "kind": "Tool", "internal": true, "desc": "Phase 2 interactive assessment tool: explore the scored network, assets, hazards and vulnerability results." },
-        { "title": "Phase 1 project documentation", "url": "https://www.marc.org/document/natural-hazard-transportation-risk-assessment-phase-1-project-documentation", "kind": "Report", "desc": "Natural Hazard Transportation Risk Assessment, July 2024 to April 2025: engagement, criticality factors and PROTECT grant narrative." },
-        { "title": "Phase 1 summary presentation", "url": "https://www.marc.org/document/natural-hazard-transportation-risk-assessment-phase-1-presentation", "kind": "Presentation", "desc": "Goals, asset and hazard criticality matrix, and findings from Phase 1." },
-        { "title": "Transportation Resiliency infographic", "url": "https://www.marc.org/sites/default/files/2024-12/Transportation%20Resiliency%20Infographic.png", "kind": "Graphic", "desc": "One-page overview of the resiliency program." },
-        { "title": "Freight resiliency technical memo", "url": "https://www.marc.org/document/technical-memo-freight-resiliency-connected-freight-kc-2050", "kind": "Memo", "desc": "Connected Freight KC 2050 memo on freight-system resilience and MARC's definition of resilience." }
-      ]
+        {
+          "title": "Transportation Resiliency KC project page",
+          "url": "https://www.marc.org/transportation-resiliency-kc",
+          "desc": "Program overview, Phase 1 results and the Phase 2 Transportation Resilience Improvement Plan (TRIP).",
+          "type": "Service"
+        },
+        {
+          "title": "Transportation Resilience Explorer",
+          "url": "./explorer/",
+          "internal": true,
+          "desc": "Interactive map of the regional network, assets and hazard exposure from the Phase 2 study.",
+          "type": "Tool"
+        },
+        {
+          "title": "Phase 1 project documentation",
+          "url": "https://www.marc.org/document/natural-hazard-transportation-risk-assessment-phase-1-project-documentation",
+          "desc": "Natural Hazard Transportation Risk Assessment, July 2024 to April 2025: engagement, criticality factors and PROTECT grant narrative.",
+          "type": "Report"
+        },
+        {
+          "title": "Phase 1 summary presentation",
+          "url": "https://www.marc.org/document/natural-hazard-transportation-risk-assessment-phase-1-presentation",
+          "desc": "Goals, asset and hazard criticality matrix, and findings from Phase 1.",
+          "type": "Report"
+        },
+        {
+          "title": "Transportation Resiliency infographic",
+          "url": "https://www.marc.org/sites/default/files/2024-12/Transportation%20Resiliency%20Infographic.png",
+          "desc": "One-page overview of the resiliency program.",
+          "type": "Report"
+        },
+        {
+          "title": "Freight resiliency technical memo",
+          "url": "https://www.marc.org/document/technical-memo-freight-resiliency-connected-freight-kc-2050",
+          "desc": "Connected Freight KC 2050 memo on freight-system resilience and MARC's definition of resilience.",
+          "type": "Report"
+        }
+      ],
+      "id": "trkc",
+      "short": "Resiliency KC"
     },
     {
       "title": "Hazards and climate",
       "blurb": "Regional plans and maps describing the natural hazards and climate risks the transportation system faces.",
       "items": [
-        { "title": "Kansas City Regional Extreme Weather Impact Map", "url": "https://marc-gis.maps.arcgis.com/apps/instant/sidebar/index.html?appid=58312389782147798cbe09c1a4363170", "kind": "Map", "desc": "Facilities, populations and infrastructure exposed to extreme weather across the region." },
-        { "title": "KCREW Impact Map Calculator", "url": "https://experience.arcgis.com/experience/0da664d426fc47818c2ef1678f8ea945", "kind": "Tool", "desc": "Select census tracts and retrieve environmental and climate resilience indicators." },
-        { "title": "2025 Regional Multi-Hazard Mitigation Plan", "url": "https://www.marc.org/safety-security/emergency-services-plans/hazard-mitigation-plan", "kind": "Plan", "desc": "FEMA-approved (Dec. 2025) plan for Cass, Clay, Jackson, Platte and Ray counties: flood, tornado, severe storm, cold, heat and drought risk assessment and mitigation strategy." },
-        { "title": "Hazard Identification and Risk Assessment (HMP Chapter 4)", "url": "https://www.marc.org/document/2025-hmp-chapter-4-risk-assessment-combined-041926", "kind": "Report", "desc": "Hazard profiles, historical occurrences, probability and vulnerability analysis." },
-        { "title": "Kansas City Regional Climate Action Plan", "url": "https://www.marc.org/environment/environment-plans/climate-action-plan", "kind": "Plan", "desc": "Voluntary regional framework for net-zero emissions by 2050 and adaptation to climate risks." },
-        { "title": "Climate Risk and Vulnerability Assessment", "url": "https://www.marc.org/sites/default/files/2022-05/Climate-Risk-and-Vulnerability-Assessment.pdf", "kind": "Report", "desc": "Regional climate projections and vulnerability assessment supporting the Climate Action Plan." },
-        { "title": "Heat Island Mitigation Assessment and Policy", "url": "https://www.marc.org/sites/default/files/2022-05/HeatIslandMitigationAssessmentandPolicy.pdf", "kind": "Report", "desc": "Urban heat island analysis and mitigation policy options for the region." },
-        { "title": "Climate Resilience at MARC", "url": "https://www.marc.org/environment/climate-resilience", "kind": "Program", "desc": "Climate Action KC, the 2025 Climate Action Technical Report and climate action guides." },
-        { "title": "Green Infrastructure Framework", "url": "https://www.marc.org/environment/environment-plans/green-infrastructure-framework", "kind": "Plan", "desc": "Regional framework for green infrastructure and stormwater resilience." }
-      ]
+        {
+          "title": "Kansas City Regional Extreme Weather Impact Map",
+          "url": "https://marc-gis.maps.arcgis.com/apps/instant/sidebar/index.html?appid=58312389782147798cbe09c1a4363170",
+          "desc": "Facilities, populations and infrastructure exposed to extreme weather across the region.",
+          "type": "Map"
+        },
+        {
+          "title": "KCREW Impact Map Calculator",
+          "url": "https://experience.arcgis.com/experience/0da664d426fc47818c2ef1678f8ea945",
+          "desc": "Select census tracts and retrieve environmental and climate resilience indicators.",
+          "type": "Tool"
+        },
+        {
+          "title": "2025 Regional Multi-Hazard Mitigation Plan",
+          "url": "https://www.marc.org/safety-security/emergency-services-plans/hazard-mitigation-plan",
+          "desc": "FEMA-approved (Dec. 2025) plan for Cass, Clay, Jackson, Platte and Ray counties: flood, tornado, severe storm, cold, heat and drought risk assessment and mitigation strategy.",
+          "type": "Plan"
+        },
+        {
+          "title": "Hazard Identification and Risk Assessment (HMP Chapter 4)",
+          "url": "https://www.marc.org/document/2025-hmp-chapter-4-risk-assessment-combined-041926",
+          "desc": "Hazard profiles, historical occurrences, probability and vulnerability analysis.",
+          "type": "Report"
+        },
+        {
+          "title": "Kansas City Regional Climate Action Plan",
+          "url": "https://www.marc.org/environment/environment-plans/climate-action-plan",
+          "desc": "Voluntary regional framework for net-zero emissions by 2050 and adaptation to climate risks.",
+          "type": "Plan"
+        },
+        {
+          "title": "Climate Risk and Vulnerability Assessment",
+          "url": "https://www.marc.org/sites/default/files/2022-05/Climate-Risk-and-Vulnerability-Assessment.pdf",
+          "desc": "Regional climate projections and vulnerability assessment supporting the Climate Action Plan.",
+          "type": "Report"
+        },
+        {
+          "title": "Heat Island Mitigation Assessment and Policy",
+          "url": "https://www.marc.org/sites/default/files/2022-05/HeatIslandMitigationAssessmentandPolicy.pdf",
+          "desc": "Urban heat island analysis and mitigation policy options for the region.",
+          "type": "Report"
+        },
+        {
+          "title": "Climate Resilience at MARC",
+          "url": "https://www.marc.org/environment/climate-resilience",
+          "desc": "Climate Action KC, the 2025 Climate Action Technical Report and climate action guides.",
+          "type": "Service"
+        },
+        {
+          "title": "Green Infrastructure Framework",
+          "url": "https://www.marc.org/environment/environment-plans/green-infrastructure-framework",
+          "desc": "Regional framework for green infrastructure and stormwater resilience.",
+          "type": "Plan"
+        }
+      ],
+      "id": "haz",
+      "short": "Hazards"
     },
     {
       "title": "Regional transportation plans",
       "blurb": "The plans the resiliency work aligns with and feeds into.",
       "items": [
-        { "title": "Connected KC 2050", "url": "https://connectedkc.org/", "kind": "Plan", "desc": "The region's metropolitan transportation plan; 2025 update adopted June 24, 2025." },
-        { "title": "Connected KC 2050 interactive maps", "url": "https://experience.arcgis.com/experience/885a17db6cc14ff38e16fd0108e81092", "kind": "Map", "desc": "Projects, forecasts, existing facilities, needs assessment and scenario planning maps." },
-        { "title": "Transportation Improvement Program (TIP)", "url": "https://www.marc.org/transportation/plans-and-studies/transportation-improvement-program", "kind": "Program", "desc": "Federally funded surface transportation projects for the next five years. Resilience scores are intended to inform TIP prioritization." },
-        { "title": "Connected Freight KC 2050", "url": "https://www.marc.org/transportation/plans-and-studies/connected-freight-kc-2050", "kind": "Plan", "desc": "Regional freight plan: corridors, project selection and land use integration." },
-        { "title": "Destination Safe Comprehensive Safety Action Plan", "url": "https://www.marc.org/safety-action-plan", "kind": "Plan", "desc": "2022 to 2027 regional safety plan targeting zero roadway deaths by 2050." },
-        { "title": "Smart Moves Transit and Mobility Plan", "url": "https://www.marc.org/transportation/transportation-plans-and-studies/smart-moves", "kind": "Plan", "desc": "20-year regional transit and mobility plan." },
-        { "title": "Regional Bikeway Plan", "url": "https://www.marc.org/transportation/plans-and-studies/regional-bikeway-plan", "kind": "Plan", "desc": "Connected regional bikeway network across city, county and state lines." },
-        { "title": "Transportation Performance Measures 2024", "url": "https://storymaps.arcgis.com/stories/a55da87134a94e89b44ff6e940dabb92", "kind": "Story", "desc": "How the region is performing on federal and regional transportation measures." },
-        { "title": "Metropolitan Planning at MARC", "url": "https://www.marc.org/transportation/metropolitan-planning", "kind": "Program", "desc": "MARC's role as the metropolitan planning organization for the bi-state Kansas City region." }
-      ]
+        {
+          "title": "Connected KC 2050",
+          "url": "https://connectedkc.org/",
+          "desc": "The region's metropolitan transportation plan; 2025 update adopted June 24, 2025.",
+          "type": "Plan"
+        },
+        {
+          "title": "Connected KC 2050 interactive maps",
+          "url": "https://experience.arcgis.com/experience/885a17db6cc14ff38e16fd0108e81092",
+          "desc": "Projects, forecasts, existing facilities, needs assessment and scenario planning maps.",
+          "type": "Map"
+        },
+        {
+          "title": "Transportation Improvement Program (TIP)",
+          "url": "https://www.marc.org/transportation/plans-and-studies/transportation-improvement-program",
+          "desc": "Federally funded surface transportation projects for the next five years. Resilience scores are intended to inform TIP prioritization.",
+          "type": "Service"
+        },
+        {
+          "title": "Connected Freight KC 2050",
+          "url": "https://www.marc.org/transportation/plans-and-studies/connected-freight-kc-2050",
+          "desc": "Regional freight plan: corridors, project selection and land use integration.",
+          "type": "Plan"
+        },
+        {
+          "title": "Destination Safe Comprehensive Safety Action Plan",
+          "url": "https://www.marc.org/safety-action-plan",
+          "desc": "2022 to 2027 regional safety plan targeting zero roadway deaths by 2050.",
+          "type": "Plan"
+        },
+        {
+          "title": "Smart Moves Transit and Mobility Plan",
+          "url": "https://www.marc.org/transportation/transportation-plans-and-studies/smart-moves",
+          "desc": "20-year regional transit and mobility plan.",
+          "type": "Plan"
+        },
+        {
+          "title": "Regional Bikeway Plan",
+          "url": "https://www.marc.org/transportation/plans-and-studies/regional-bikeway-plan",
+          "desc": "Connected regional bikeway network across city, county and state lines.",
+          "type": "Plan"
+        },
+        {
+          "title": "Transportation Performance Measures 2024",
+          "url": "https://storymaps.arcgis.com/stories/a55da87134a94e89b44ff6e940dabb92",
+          "desc": "How the region is performing on federal and regional transportation measures.",
+          "type": "Report"
+        },
+        {
+          "title": "Metropolitan Planning at MARC",
+          "url": "https://www.marc.org/transportation/metropolitan-planning",
+          "desc": "MARC's role as the metropolitan planning organization for the bi-state Kansas City region.",
+          "type": "Service"
+        }
+      ],
+      "id": "plans",
+      "short": "Plans"
     },
     {
       "title": "Transportation data and maps",
       "blurb": "MARC's open data and interactive maps for the transportation network.",
       "items": [
-        { "title": "MARC Open Data Portal", "url": "https://opendata-marc-gis.hub.arcgis.com/", "kind": "Data", "desc": "Downloadable regional datasets, interactive maps, dashboards and data stories." },
-        { "title": "MARC Data Catalog", "url": "https://data.marc.org/datacatalog/", "kind": "Data", "desc": "Searchable catalog of MARC data, services, web maps and applications." },
-        { "title": "MARC Functional Classification", "url": "https://experience.arcgis.com/experience/ef7774562bfc483799252170f6362e7e", "kind": "Map", "desc": "Current functional classification of roads in the MARC planning area." },
-        { "title": "MARC Regional Traffic Forecast Map", "url": "https://marc-gis.maps.arcgis.com/apps/instant/sidebar/index.html?appid=6686037cfb124b0b90c241c4c936e82a", "kind": "Map", "desc": "Travel model base-year assignment and future traffic volume forecasts." },
-        { "title": "MARC Crash Data Dashboard", "url": "https://data.marc.org/crashmap/", "kind": "Dashboard", "desc": "Regional crash data by location, severity and mode." },
-        { "title": "Kansas City Freight Map", "url": "https://www.arcgis.com/home/item.html?id=eec3ce70a838410ebd93295737ecf78e", "kind": "Map", "desc": "Infrastructure, corridors and areas important to goods movement." },
-        { "title": "Kansas City Regional Trails and Bikeways Map", "url": "https://marc-gis.maps.arcgis.com/apps/instant/sidebar/index.html?appid=adfd7dbbf48c4044bdd6e17cba757891", "kind": "Map", "desc": "Existing and planned trails and bikeways across the region." },
-        { "title": "Bridges (NBI time series)", "url": "https://gis2.marc2.org/arcgis/rest/services/Transportation/Bridges/MapServer", "kind": "Service", "desc": "Map service with National Bridge Inventory data for the region over time." },
-        { "title": "Flood Zones", "url": "https://gis2.marc2.org/arcgis/rest/services/Environment/FloodZones/MapServer", "kind": "Service", "desc": "FEMA flood hazard areas within the flood risk project area." },
-        { "title": "Hazard Mitigation Reference", "url": "https://gis2.marc2.org/arcgis/rest/services/PublicSafety/HazardMitigationReference/MapServer", "kind": "Service", "desc": "Reference layers used for regional hazard mitigation planning." },
-        { "title": "Greater Kansas City Green Region Explorer", "url": "https://marc-gis.maps.arcgis.com/apps/instant/basic/index.html?appid=2d79498b82f24a53ad6fb42bbe0f5f94", "kind": "Map", "desc": "Environmental resources, MetroGreen corridors and natural areas." },
-        { "title": "EV Readiness Atlas", "url": "https://marc-gis.maps.arcgis.com/apps/instant/sidebar/index.html?appid=2dd454fe9e0346939bcb345315719df7", "kind": "Map", "desc": "Electric vehicle readiness and charging infrastructure planning map." },
-        { "title": "Population Explorer", "url": "https://data.marc.org/populationexplorer/", "kind": "Tool", "desc": "Demographic, economic, household and health data in maps, charts and tables." },
-        { "title": "Download data and maps", "url": "https://www.marc.org/data-maps/download-data-and-maps", "kind": "Data", "desc": "Static maps and downloadable data from MARC's Data & Maps section." }
-      ]
+        {
+          "title": "MARC Open Data Portal",
+          "url": "https://opendata-marc-gis.hub.arcgis.com/",
+          "desc": "Downloadable regional datasets, interactive maps, dashboards and data stories.",
+          "type": "Data"
+        },
+        {
+          "title": "MARC Data Catalog",
+          "url": "https://data.marc.org/datacatalog/",
+          "desc": "Searchable catalog of MARC data, services, web maps and applications.",
+          "type": "Data"
+        },
+        {
+          "title": "MARC Functional Classification",
+          "url": "https://experience.arcgis.com/experience/ef7774562bfc483799252170f6362e7e",
+          "desc": "Current functional classification of roads in the MARC planning area.",
+          "type": "Map"
+        },
+        {
+          "title": "MARC Regional Traffic Forecast Map",
+          "url": "https://marc-gis.maps.arcgis.com/apps/instant/sidebar/index.html?appid=6686037cfb124b0b90c241c4c936e82a",
+          "desc": "Travel model base-year assignment and future traffic volume forecasts.",
+          "type": "Map"
+        },
+        {
+          "title": "MARC Crash Data Dashboard",
+          "url": "https://data.marc.org/crashmap/",
+          "desc": "Regional crash data by location, severity and mode.",
+          "type": "Tool"
+        },
+        {
+          "title": "Kansas City Freight Map",
+          "url": "https://www.arcgis.com/home/item.html?id=eec3ce70a838410ebd93295737ecf78e",
+          "desc": "Infrastructure, corridors and areas important to goods movement.",
+          "type": "Map"
+        },
+        {
+          "title": "Kansas City Regional Trails and Bikeways Map",
+          "url": "https://marc-gis.maps.arcgis.com/apps/instant/sidebar/index.html?appid=adfd7dbbf48c4044bdd6e17cba757891",
+          "desc": "Existing and planned trails and bikeways across the region.",
+          "type": "Map"
+        },
+        {
+          "title": "Bridges (NBI time series)",
+          "url": "https://gis2.marc2.org/arcgis/rest/services/Transportation/Bridges/MapServer",
+          "desc": "Map service with National Bridge Inventory data for the region over time.",
+          "type": "Data"
+        },
+        {
+          "title": "Flood Zones",
+          "url": "https://gis2.marc2.org/arcgis/rest/services/Environment/FloodZones/MapServer",
+          "desc": "FEMA flood hazard areas within the flood risk project area.",
+          "type": "Data"
+        },
+        {
+          "title": "Hazard Mitigation Reference",
+          "url": "https://gis2.marc2.org/arcgis/rest/services/PublicSafety/HazardMitigationReference/MapServer",
+          "desc": "Reference layers used for regional hazard mitigation planning.",
+          "type": "Data"
+        },
+        {
+          "title": "Greater Kansas City Green Region Explorer",
+          "url": "https://marc-gis.maps.arcgis.com/apps/instant/basic/index.html?appid=2d79498b82f24a53ad6fb42bbe0f5f94",
+          "desc": "Environmental resources, MetroGreen corridors and natural areas.",
+          "type": "Map"
+        },
+        {
+          "title": "EV Readiness Atlas",
+          "url": "https://marc-gis.maps.arcgis.com/apps/instant/sidebar/index.html?appid=2dd454fe9e0346939bcb345315719df7",
+          "desc": "Electric vehicle readiness and charging infrastructure planning map.",
+          "type": "Map"
+        },
+        {
+          "title": "Population Explorer",
+          "url": "https://data.marc.org/populationexplorer/",
+          "desc": "Demographic, economic, household and health data in maps, charts and tables.",
+          "type": "Tool"
+        },
+        {
+          "title": "Download data and maps",
+          "url": "https://www.marc.org/data-maps/download-data-and-maps",
+          "desc": "Static maps and downloadable data from MARC's Data & Maps section.",
+          "type": "Data"
+        }
+      ],
+      "id": "data",
+      "short": "Data and maps"
     },
     {
       "title": "About MARC",
-      "blurb": "",
+      "blurb": "Who we are and how to take part in regional transportation decisions.",
       "items": [
-        { "title": "Mid-America Regional Council", "url": "https://www.marc.org/", "kind": "Site", "desc": "Regional planning organization and council of governments for the bi-state Kansas City region." },
-        { "title": "Data & Maps", "url": "https://www.marc.org/data-and-maps", "kind": "Site", "desc": "MARC's research and GIS services hub." },
-        { "title": "Transportation committees", "url": "https://www.marc.org/committees?title=&field_focus_area_target_id=88&items_per_page=18", "kind": "Site", "desc": "Total Transportation Policy Committee and technical committees." },
-        { "title": "Transportation public input", "url": "https://www.marc.org/transportation/metropolitan-planning/transportation-public-input", "kind": "Site", "desc": "How to comment on regional transportation plans and programs." },
-        { "title": "Contact MARC", "url": "https://www.marc.org/about-marc/contact-us", "kind": "Site", "desc": "801 Pennsylvania Avenue, Kansas City, MO 64105. 816-474-4240." }
-      ]
+        {
+          "title": "Mid-America Regional Council",
+          "url": "https://www.marc.org/",
+          "desc": "Regional planning organization and council of governments for the bi-state Kansas City region.",
+          "type": "Service"
+        },
+        {
+          "title": "Data & Maps",
+          "url": "https://www.marc.org/data-and-maps",
+          "desc": "MARC's research and GIS services hub.",
+          "type": "Service"
+        },
+        {
+          "title": "Transportation committees",
+          "url": "https://www.marc.org/committees?title=&field_focus_area_target_id=88&items_per_page=18",
+          "desc": "Total Transportation Policy Committee and technical committees.",
+          "type": "Service"
+        },
+        {
+          "title": "Transportation public input",
+          "url": "https://www.marc.org/transportation/metropolitan-planning/transportation-public-input",
+          "desc": "How to comment on regional transportation plans and programs.",
+          "type": "Service"
+        },
+        {
+          "title": "Contact MARC",
+          "url": "https://www.marc.org/about-marc/contact-us",
+          "desc": "801 Pennsylvania Avenue, Kansas City, MO 64105. 816-474-4240.",
+          "type": "Service"
+        }
+      ],
+      "id": "about",
+      "short": "About MARC"
     }
   ]
 }

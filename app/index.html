@@ -2,38 +2,196 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./marc-logo.svg" />
+    <link rel="icon" type="image/svg+xml" href="/marc-logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="MARC Transportation Resilience Explorer — explore the data layers of the Mid-America Regional Council's Transportation Resilience Phase 2 study for the Kansas City region."
+      content="Transportation Resiliency KC — MARC's hub for transportation resilience resources in the Kansas City region: the Resilience Explorer, study reports, hazard and climate plans, and regional data."
     />
-    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
-    <!-- Link-preview card. og:url must be absolute — update when the app moves
-         to its production domain (currently GitHub Pages). -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Mid-America Regional Council" />
-    <meta property="og:title" content="MARC Transportation Resilience Explorer" />
+    <meta property="og:title" content="Transportation Resiliency KC" />
     <meta
       property="og:description"
-      content="Explore roadway network, bridge and boundary data from MARC's Transportation Resilience Phase 2 study for the Kansas City region."
+      content="Resources for making the Kansas City region's roads, bridges and transit more resilient to extreme weather."
     />
     <meta property="og:url" content="https://high-street-consulting.github.io/marc-resiliency-study/" />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="MARC Transportation Resilience Explorer" />
-    <meta
-      name="twitter:description"
-      content="Explore roadway network, bridge and boundary data from MARC's Transportation Resilience Phase 2 study for the Kansas City region."
-    />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Mono:wght@400&display=swap"
     />
-    <title>MARC Transportation Resilience Explorer</title>
+    <title>Transportation Resiliency KC | MARC</title>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <div class="marc-bands" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="brand" href="https://www.marc.org/" title="Mid-America Regional Council home">
+        <img id="brand-logo" alt="Mid-America Regional Council" />
+      </a>
+      <nav class="site-nav" aria-label="MARC">
+        <a href="https://www.marc.org/transportation" aria-current="page">Transportation</a>
+        <a href="https://www.marc.org/environment">Environment</a>
+        <a href="https://www.marc.org/emergency-services">Safety &amp; Security</a>
+        <a href="https://www.marc.org/data-and-maps">Data &amp; Maps</a>
+        <a href="https://www.marc.org/about-mid-america-regional-council">About</a>
+      </nav>
+      <div class="site-actions">
+        <a class="btn btn-outline" href="https://www.marc.org/about-marc/contact-us">Contact</a>
+        <a class="btn btn-outline" href="https://www.marc.org/about-marc/contact-us/marc-news-and-updates-your-inbox">Subscribe</a>
+      </div>
+      <button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav-phone">
+        <span class="menu-bars" aria-hidden="true"><i></i><i></i><i></i></span>Menu
+      </button>
+    </header>
+    <nav id="site-nav-phone" class="site-nav-phone" aria-label="MARC" hidden>
+      <a href="https://www.marc.org/transportation" aria-current="page">Transportation</a>
+      <a href="https://www.marc.org/environment">Environment</a>
+      <a href="https://www.marc.org/emergency-services">Safety &amp; Security</a>
+      <a href="https://www.marc.org/data-and-maps">Data &amp; Maps</a>
+      <a href="https://www.marc.org/about-mid-america-regional-council">About</a>
+      <a href="https://www.marc.org/about-marc/contact-us">Contact</a>
+    </nav>
+
+    <main id="main">
+      <section class="hero">
+        <div class="hero-text">
+          <div class="crumbs"><a href="https://www.marc.org/transportation">Transportation</a><span>/</span><span>Resiliency</span></div>
+          <h1>Transportation Resiliency KC</h1>
+          <p>
+            Making the region's roads, bridges, transit and critical infrastructure more durable and
+            adaptable to extreme weather and other disruptions.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <a class="btn btn-outline" href="https://www.marc.org/transportation-resiliency-kc">About the study</a>
+          <a class="btn btn-solid" href="./explorer/">Open the Resilience Explorer</a>
+        </div>
+      </section>
+
+      <section class="featured" aria-labelledby="featured-title">
+        <a class="shot" href="./explorer/" aria-label="Open the Resilience Explorer">
+          <span class="shot-label">Screenshot · Explorer map, regional hazard exposure layer</span>
+        </a>
+        <div class="featured-body">
+          <span class="overline overline-teal">Featured tool</span>
+          <h2 id="featured-title">Transportation Resilience Explorer</h2>
+          <p>
+            See where flooding, extreme heat and winter storms threaten the region's roads, bridges and
+            transit. Compare hazard exposure by corridor, county or asset.
+          </p>
+          <ul class="modules">
+            <li><span class="mod-name">Explore</span><span class="tag tag-teal">Available</span></li>
+            <li><span class="mod-name muted">Stranded Zones</span><span class="tag tag-dashed">Coming 2027</span></li>
+            <li><span class="mod-name muted">Project Scoring</span><span class="tag tag-dashed">Coming 2027</span></li>
+          </ul>
+          <a class="btn btn-solid btn-block" href="./explorer/">Open the Resilience Explorer</a>
+        </div>
+      </section>
+
+      <section class="study" aria-labelledby="study-title">
+        <h2 id="study-title" class="h2">The study</h2>
+        <div class="phases">
+          <article class="phase">
+            <div class="phase-bar" style="background: #31787d"></div>
+            <div class="phase-body">
+              <div class="phase-meta"><span class="overline">Step 1 of 2 · Phase 1</span><span class="tag tag-teal">Complete</span></div>
+              <h3>Natural Hazard Transportation Risk Assessment</h3>
+              <p>Identified which roads, bridges and transit assets are most exposed to natural hazards.</p>
+              <div class="phase-links">
+                <a href="https://www.marc.org/document/natural-hazard-transportation-risk-assessment-phase-1-project-documentation">Phase 1 report</a>
+                <a href="https://www.marc.org/document/natural-hazard-transportation-risk-assessment-phase-1-presentation">Presentation</a>
+              </div>
+            </div>
+          </article>
+          <article class="phase">
+            <div class="phase-bar phase-bar-track"><span style="width: 50%; background: #d7ba5c"></span></div>
+            <div class="phase-body">
+              <div class="phase-meta"><span class="overline">Step 2 of 2 · Phase 2</span><span class="tag tag-gold">In progress · Summer 2027</span></div>
+              <h3>Transportation Resilience Improvement Plan</h3>
+              <p>Turns Phase 1 findings into a prioritized list of projects and strategies the region can fund and build.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="directory" aria-labelledby="directory-title">
+        <div class="directory-head">
+          <h2 id="directory-title">Resource directory</h2>
+          <span id="summary" class="summary" aria-live="polite"></span>
+        </div>
+        <div class="directory-grid">
+          <aside class="filters">
+            <label class="search">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a4a4a" stroke-width="2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5 21 21"></path></svg>
+              <input id="q" type="search" placeholder="Search resources" aria-label="Search resources" />
+            </label>
+            <div class="filter-block">
+              <span class="filter-label">Group</span>
+              <div id="group-nav" class="group-nav" role="group" aria-label="Filter by group"></div>
+              <select id="group-select" aria-label="Filter by group"></select>
+            </div>
+            <div class="filter-block">
+              <span class="filter-label">Type</span>
+              <div id="type-nav" class="type-nav" role="group" aria-label="Filter by type"></div>
+            </div>
+            <button id="clear" class="btn btn-outline btn-sm" type="button" hidden>Clear filters</button>
+          </aside>
+          <div id="groups" class="groups"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="marc-bands" aria-hidden="true"></div>
+      <div class="footer-wrap">
+        <div class="footer-brand">
+          <a href="https://www.marc.org/"><img id="footer-logo" alt="Mid-America Regional Council" /></a>
+          <div class="social">
+            <a href="https://www.facebook.com/MARCKCMetro" aria-label="Facebook">FB</a>
+            <a href="https://twitter.com/MARCKCMetro" aria-label="X">X</a>
+            <a href="https://www.linkedin.com/company/mid-america-regional-council/" aria-label="LinkedIn">IN</a>
+            <a href="https://www.instagram.com/marckcmetro/" aria-label="Instagram">IG</a>
+            <a href="https://www.youtube.com/MarcOrg" aria-label="YouTube">YT</a>
+          </div>
+        </div>
+        <div class="footer-cols">
+          <div>
+            <span class="footer-h">Contact</span>
+            <span>801 Pennsylvania Avenue</span><span>Kansas City, MO 64105</span>
+            <a href="tel:+18164744240">816-474-4240</a>
+            <a href="https://www.marc.org/about-marc/staff">Staff directory</a>
+          </div>
+          <div>
+            <span class="footer-h">Site information</span>
+            <a href="https://www.marc.org/accessibility">Accessibility</a>
+            <a href="https://www.marc.org/privacy-policy-and-terms-use">Privacy policy</a>
+            <a href="https://www.marc.org/about-marc/civil-rights-and-nondiscrimination">Civil rights and nondiscrimination</a>
+            <a href="https://www.marc.org/about-marc/contact-us/open-records-request">Open records request</a>
+          </div>
+          <div>
+            <span class="footer-h">Quick links</span>
+            <a href="https://www.marc.org/training-and-events">Training and events</a>
+            <a href="https://www.marc.org/news">News</a>
+            <a href="https://www.marc.org/committees/marc-board-directors">Board of Directors</a>
+            <a href="https://opendata-marc-gis.hub.arcgis.com/">Open data</a>
+          </div>
+          <div>
+            <span class="footer-h">Opportunities</span>
+            <a href="https://www.marc.org/about-marc/careers-marc/open-positions">Careers and internships</a>
+            <a href="https://www.marc.org/about-marc/funding-and-rfps">Funding and RFPs</a>
+            <a href="https://kcgovjobs.org/">KC Gov Jobs</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-base">
+        <span>Data published by the Mid-America Regional Council and partner agencies for the Transportation Resilience Phase 2 study. Prototype by High Street.</span>
+        <span>© 2026 Mid-America Regional Council</span>
+      </div>
+    </footer>
+    <script type="module" src="/src/landing/main.ts"></script>
   </body>
 </html>

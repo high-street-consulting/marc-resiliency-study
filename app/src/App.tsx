@@ -24,6 +24,7 @@
  * - Anything the SDK owns is re-read from the SDK rather than assumed.
  */
 
+import marcLogoWhite from './assets/marc-logo-white.svg'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type Geometry from '@arcgis/core/geometry/Geometry'
 
@@ -249,7 +250,7 @@ export default function App() {
           padding: '0 16px',
         }}
       >
-        <img src="./marc-logo-white.svg" alt="Mid-America Regional Council" style={{ height: 16, width: 'auto' }} />
+        <img src={marcLogoWhite} alt="Mid-America Regional Council" style={{ height: 16, width: 'auto' }} />
         <div style={{ font: '400 10px/1.3 var(--sc-font)', color: 'rgba(255,255,255,.65)' }}>{ATTRIBUTION}</div>
       </footer>
 

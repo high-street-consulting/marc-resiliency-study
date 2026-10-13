@@ -5,6 +5,7 @@
  */
 
 import { Icon } from './icons'
+import marcLogo from '../assets/marc-logo-color.svg'
 
 const headerBtn: React.CSSProperties = {
   height: 32,
@@ -76,7 +77,7 @@ export function Header({
           className="sc-brand"
           style={{ gap: phone ? 8 : 14 }}
         >
-          <img src="./marc-logo-color.svg" alt="" style={{ height: 44, width: 'auto', flex: 'none' }} />
+          <img src={marcLogo} alt="" style={{ height: 44, width: 'auto', flex: 'none' }} />
           {phone ? (
             <h1 className="sr-only">MARC Transportation Resilience Explorer</h1>
           ) : (

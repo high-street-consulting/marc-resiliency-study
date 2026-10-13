@@ -1,8 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// base './' so the built app runs from any subdirectory
-// (deployed to https://high-street-consulting.github.io/marc-resiliency-study/ by .github/workflows)
+// base './' so the built site runs from any subdirectory
+// (deployed to https://high-street-consulting.github.io/marc-resiliency-study/ by .github/workflows).
+// Two pages: the landing page at the root and the Explorer under /explorer/.
 export default defineConfig({
   base: './',
   plugins: [react()],
@@ -13,5 +14,11 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 3000,
+    rollupOptions: {
+      input: {
+        landing: 'index.html',
+        explorer: 'explorer/index.html',
+      },
+    },
   },
 })
