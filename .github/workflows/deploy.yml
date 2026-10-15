@@ -1,9 +1,8 @@
 name: Deploy to GitHub Pages
 
+# Manual only: GitHub Pages is not enabled on this private repo (needs a paid org plan).
+# Cloudflare Pages builds main on push instead. Re-add the push trigger if Pages is enabled.
 on:
-  push:
-    branches: [main]
-    paths: ['app/**', '.github/workflows/deploy.yml']
   workflow_dispatch:
 
 permissions:
