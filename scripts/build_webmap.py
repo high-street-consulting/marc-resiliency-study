@@ -55,6 +55,7 @@ def num(name, label, places):
 TEAL = [[156, 203, 207], [120, 184, 189], [95, 165, 172], [49, 120, 125], [23, 71, 75]]
 # Esri "Blue 28" ramp (ArcGIS Maps SDK colorRamps: #c3cad9 #a9b3c9 #8898c0 #6d7fad #505e85), scenario rows only.
 BLUE28 = [[195, 202, 217], [169, 179, 201], [136, 152, 192], [109, 127, 173], [80, 94, 133]]
+GRAY = [[90, 90, 90], [40, 40, 40]]  # detour paths, closed segments
 
 ALIASES = common.load_aliases()
 
@@ -118,18 +119,18 @@ ZONE_POPUP = {"title": "{zone_type} zone {zone_id}", "fieldInfos": [
 
 # measure (catalog row) -> (service layer prefix, style of each scenario's layer)
 # Scenario results take Blue 28 stops two apart so no two classes are neighbours on the ramp: darkest = cut off,
-# middle = one way out, darkest dashed = closures, lightest and wider = detours; 60% so basemap roads show through.
+# middle = one way out; closures and detours are dark grays (dashed / solid) so they read against the blues.
 SCENARIO_MEASURES = {
     "Stranded zones": ("stranded_zones_", {"opacity": 0.6, "popup": ZONE_POPUP, "def": {"drawingInfo": {"renderer": {
         "type": "uniqueValue", "field1": "zone_type", "uniqueValueInfos": [
             {"value": "stranded", "label": "Stranded (cut off from the main network)", "symbol": line(BLUE28[4], 1.8)},
             {"value": "single_egress", "label": "Single egress (one way out left)", "symbol": line(BLUE28[2], 1.4)}]}}}}),
-    "Closed segments": ("closed_edges_", {"opacity": 0.6, "popup": {"title": "Closed edge {edge_id}", "fieldInfos": [
+    "Closed segments": ("closed_edges_", {"opacity": 0.8, "popup": {"title": "Closed edge {edge_id}", "fieldInfos": [
         num("threshold_ft", "Closure depth (ft)", 1), num("detour_mi", "Detour around it (mi)", 2), num("no_detour", "No detour (1 = cut off)", 0)]},
-        "def": {"drawingInfo": {"renderer": {"type": "simple", "symbol": {**line(BLUE28[4], 1.2), "style": "esriSLSDash"}}}}}),
-    "Detour paths": ("detours_", {"opacity": 0.6, "popup": {"title": "Detour for {closed_edge_id}", "fieldInfos": [
+        "def": {"drawingInfo": {"renderer": {"type": "simple", "symbol": {**line(GRAY[1], 1.4), "style": "esriSLSDash"}}}}}),
+    "Detour paths": ("detours_", {"opacity": 0.8, "popup": {"title": "Detour for {closed_edge_id}", "fieldInfos": [
         num("threshold_ft", "Closure depth (ft)", 1), num("detour_mi", "Detour length (mi)", 2), num("path_edges", "Edges on path", 0)]},
-        "def": {"drawingInfo": {"renderer": {"type": "simple", "symbol": line(BLUE28[0], 2.2)}}}}),
+        "def": {"drawingInfo": {"renderer": {"type": "simple", "symbol": line(GRAY[0], 2.4)}}}}),
 }
 
 

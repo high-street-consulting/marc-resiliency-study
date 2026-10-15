@@ -51,7 +51,7 @@ export function Header({
     background: 'transparent',
     color: '#1a1a1a',
   }
-  const current: React.CSSProperties = { ...navItem, color: 'var(--sc-navy)', borderBottomColor: 'var(--sc-navy)', fontWeight: 700 }
+  const current: React.CSSProperties = { ...navItem, color: 'var(--sc-navy)', borderBottom: '3px solid var(--sc-navy)', fontWeight: 700 }
   const hover = (on: boolean) => (e: React.MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.style.background = on ? 'var(--sc-navy)' : 'transparent'
     e.currentTarget.style.color = on ? '#fff' : 'var(--sc-navy)'

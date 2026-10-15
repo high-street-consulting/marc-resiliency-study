@@ -1,6 +1,6 @@
 # Methodology: network conflation and stranded zone analysis
 
-MARC Transportation Resiliency KC, Phase 2. High Street Consulting. Draft, October 13, 2026.
+MARC Transportation Resiliency KC, Phase 2. High Street Consulting. Draft, October 15, 2026.
 
 This note records how the road networks are built, why the design changed from the October 2026 Road Networks deck, and how the stranded zone analysis runs on them. Inputs, vintages and download dates are in `inputs.md`. Parameters live in `config/`. Every step is a script under `scripts/` with a notebook wrapper under `notebooks/`, so MARC can rerun it.
 
@@ -107,7 +107,7 @@ The no-detour share is high for the same reason as baseline redundancy: a closed
 
 - Closure depth threshold and return period: MARC decision. The threshold is run as a ladder (0.5, 1, 1.5, 2 and 3 ft) and every step is published with the scenario layers, so the Explorer can switch between them; the scored network carries the default step (0.5 ft).
 - Fathom outputs are licensed for this project only; results are a dated snapshot and the scripts are parameterized so MARC can rerun with other hazard data.
-- Age shares need a tract-level ACS pull not yet in the inventory.
+- Age shares come from the ACS 2020-2024 B01001 tract pull listed in `inputs.md` (under 18 and 65 and over).
 - Whether redundancy (detour length) scores under criticality or adaptive capacity is still open in the framework; it is computed once and used once.
 - Redundancy on one-way chains: measuring the detour between the removed edge's own end nodes marks most freeway and ramp edges as no-path, because a one-way node loses its only exit. The candidate fix is to measure from the last upstream node where a driver still has a choice (the nearest predecessor with out-degree above one) to the first downstream node with an alternative entry. Decision pending; the current `redundancy_no_path` flag should not be scored until it is made.
 - Fathom flood scenarios are not yet run: the hazard tables must be delivered keyed on `edge_id` (or on sections, then moved to edges through the linkage). The `fema_1pct` method test runs today and is published as `draft_MARC_Resiliency_Scenarios`.

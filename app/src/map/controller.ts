@@ -859,6 +859,7 @@ export class MapController {
       if (g) geoms.push(g)
     }
     if (customGeometry) geoms.push(customGeometry)
+    else this.sketchLayer.removeAll()
     const union =
       geoms.length === 0 ? null : geoms.length === 1 ? geoms[0] : (geometryEngine.union(geoms as any) as Geometry)
     this.areaGeometry = union

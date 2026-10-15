@@ -72,7 +72,7 @@ const SECTIONS: { title: string; intro?: string; items: { term: string; text: st
       },
       {
         term: 'closed, stranded, detour_mi (scenario fields)',
-        text: 'For each flood scenario (return period, year, climate scenario and closure depth threshold), an edge is closed when its flood depth exceeds the threshold. The threshold is run as a ladder (0.5, 1, 1.5, 2 and 3 ft) and every step is published with the scenario layers, so the Explorer can switch between them; the scored network carries the default step (0.5 ft). Stranded is set on edges cut off from the main network. detour_mi is the shortest surviving path around a closed edge. Today one scenario is published, the FEMA 1% floodplain method test: every non-bridge edge inside the FEMA floodway or 1% annual chance zone is closed (8,512 of 172,167 edges). Fathom depth scenarios fill in when the edge-keyed depth table is delivered.',
+        text: 'For each flood scenario (return period, year, climate scenario and closure depth threshold), an edge is closed when its flood depth exceeds the threshold. The threshold is run as a ladder (0.5, 1, 1.5, 2 and 3 ft) and every step is published with the scenario layers, so the Explorer can switch between them; the scored network carries the default step (0.5 ft). Stranded is set on edges cut off from the main network. detour_mi is the shortest surviving path around a closed edge. Today one scenario is published, the FEMA 1% floodplain method test: every non-bridge edge inside the FEMA floodway or 1% annual chance zone is closed (8,512 of 172,167 edges). Fathom depth scenarios fill in once the purchased depths are keyed to edges.',
       },
     ],
   },
@@ -86,6 +86,10 @@ const SECTIONS: { title: string; intro?: string; items: { term: string; text: st
       {
         term: 'Centrality symbology',
         text: 'The same teal ramp applied to betweenness centrality, from lowest to highest. It is a second option on the vulnerability assessment network row; only one option draws at a time.',
+      },
+      {
+        term: 'Scenario symbology',
+        text: 'Stranded zones draw in two blues (darker: cut off; lighter: one way out left). Closed segments are a dark dashed gray line and detour paths a solid gray line, both 80% opaque, so the scenario reads as blue zones with gray causes and responses.',
       },
       {
         term: 'FEMA flood hazard areas',
@@ -119,7 +123,7 @@ const SECTIONS: { title: string; intro?: string; items: { term: string; text: st
     items: [
       {
         term: 'Sources',
-        text: 'OpenStreetMap via Geofabrik (ODbL), FHWA HPMS 2024, KDOT, MoDOT, FHWA NBI, US Census ACS, CDC PLACES, FEMA NFHL, and Fathom flood depths delivered by ICF under a project-only licence.',
+        text: 'OpenStreetMap via Geofabrik (ODbL), FHWA HPMS 2024, KDOT, MoDOT, FHWA NBI, US Census ACS, CDC PLACES, FEMA NFHL, and the Fathom US Flood Model, purchased for this project under a project-only licence.',
       },
       {
         term: 'Projection',
@@ -127,7 +131,7 @@ const SECTIONS: { title: string; intro?: string; items: { term: string; text: st
       },
       {
         term: 'Open items',
-        text: 'Closure depth threshold and return period are MARC decisions. The KDOT pavement route code crosswalk is awaiting KDOT confirmation. Fathom flood scenarios run once edge-keyed depths arrive; the FEMA 1% method test is a stand-in that closes whole floodplain crossings regardless of depth, so its stranded zones are an upper bound. The full write-up is docs/methodology.md in the application source repository.',
+        text: 'Closure depth threshold and return period are MARC decisions. The KDOT pavement route code crosswalk is awaiting KDOT confirmation. Fathom flood scenarios run once the purchased depths are keyed to edges; the FEMA 1% method test is a stand-in that closes whole floodplain crossings regardless of depth, so its stranded zones are an upper bound. The full write-up is docs/methodology.md in the application source repository.',
       },
     ],
   },
@@ -175,7 +179,7 @@ export function MethodologyDialog({ open, onClose }: { open: boolean; onClose: (
             Methodology — how the values were calculated
           </h2>
           <div style={{ marginTop: 4, font: '400 11.5px/1.4 var(--sc-font)', color: 'var(--sc-gray-dark)' }}>
-            MARC Transportation Resilience Phase 2. Draft of October 14, 2026.
+            MARC Transportation Resilience Phase 2. Draft of October 15, 2026.
           </div>
         </div>
         <button
