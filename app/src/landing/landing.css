@@ -171,19 +171,16 @@ p {
   box-shadow: var(--shadow);
 }
 .shot {
-  display: flex;
-  align-items: flex-end;
-  min-height: 560px;
-  padding: 20px;
+  display: block;
+  overflow: hidden;
   border-right: 1px solid var(--hairline);
-  background: repeating-linear-gradient(135deg, #ecebeb 0 12px, #f3f2f2 12px 24px);
-  text-decoration: none;
 }
-.shot-label {
-  font: 400 12px/1 'Roboto Mono', monospace;
-  color: var(--text-2);
-  background: #fff;
-  padding: 4px 8px;
+.shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: left top;
 }
 .featured-body {
   display: flex;
