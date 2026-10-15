@@ -68,6 +68,17 @@ def run(cfg=None):
             arcpy.management.Project(p, os.path.join(out, name), sr)
         else:
             arcpy.management.Copy(p, os.path.join(out, name))
+
+    aliases = common.load_aliases()
+    scenarios = cfg["analysis"].get("scenarios", [])
+    arcpy.env.workspace = out
+    targets = [os.path.join(ds, fc) for ds in arcpy.ListDatasets(feature_type="Feature") or []
+               for fc in arcpy.ListFeatureClasses(feature_dataset=ds) or []]
+    targets += (arcpy.ListFeatureClasses() or []) + (arcpy.ListTables() or [])
+    for t in targets:
+        p = os.path.join(out, t)
+        demoted = common.demote_new_types(p)
+        print(f"{t}: {demoted} fields demoted to classic types, {common.apply_aliases(p, aliases, scenarios)} aliases")
     print(f"deliverable: {out}")
     return out
 

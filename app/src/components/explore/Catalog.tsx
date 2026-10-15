@@ -4,14 +4,13 @@ import { Icon } from '../icons'
 import { controller } from '../../map/controller'
 import type { CatalogEntry } from '../../map/controller'
 import { MAX_ATTRIBUTE_RADIOS, PCT_LIKE } from '../../config/registry'
-import { numericStats, useStatsVersion } from '../../lib/stats'
+import { categoryStats, numericStats, useStatsVersion } from '../../lib/stats'
 import { fmtStat } from '../../lib/format'
 
 interface FilterVal {
   code?: string
   lo?: number
   hi?: number
-  text?: string
 }
 
 /** Layer catalog — 340px aside. Accordion sections, search, per-layer
@@ -123,8 +122,6 @@ export function Catalog({
       if (fv.lo !== undefined) parts.push(`${field.name} >= ${fv.lo}`)
       if (fv.hi !== undefined) parts.push(`${field.name} <= ${fv.hi}`)
       where = parts.join(' AND ')
-    } else if (fv.text) {
-      where = `UPPER(${field.name}) LIKE UPPER('%${fv.text.replace(/'/g, "''")}%')`
     }
     controller.setDefinitionExpression(entry.id, where || null)
   }
@@ -469,7 +466,7 @@ function LayerRow({
 /** True when a stored filter value would actually narrow the layer. */
 function isActive(fv: FilterVal | undefined): boolean {
   if (!fv) return false
-  return (fv.code !== undefined && fv.code !== '__all') || fv.lo !== undefined || fv.hi !== undefined || !!fv.text
+  return (fv.code !== undefined && fv.code !== '__all') || fv.lo !== undefined || fv.hi !== undefined
 }
 
 function FilterControl({
@@ -504,7 +501,7 @@ function FilterControl({
       <button
         className="sc-link-btn"
         style={{ fontSize: 10.5 }}
-        onClick={() => onFilter(entry, strayField, { code: undefined, lo: undefined, hi: undefined, text: '' })}
+        onClick={() => onFilter(entry, strayField, { code: undefined, lo: undefined, hi: undefined })}
       >
         Clear
       </button>
@@ -527,15 +524,31 @@ function FilterControl({
   const key = `${entry.id}|${field.name}`
   const fv = filters[key] ?? {}
   const domain = (field.domain as { codedValues?: { name: string; code: string | number }[] } | null)?.codedValues
+  const numeric = /double|single|integer|small-integer|long|oid/.test(field.type ?? '')
 
   let control: React.ReactNode = null
   let note = ''
 
+  // Categorical fields are always a pick-list, never free text: the domain's
+  // codes when the field has one, otherwise the field's own distinct values
+  // labelled by the renderer where it names them.
+  let options: { value: string; label: string }[] | null = null
   if (domain?.length) {
-    note =
-      fv.code === undefined || fv.code === '__all'
-        ? 'This field publishes a coded-value domain, so the filter is a list.'
-        : `Showing features coded ${fv.code}.`
+    options = domain.slice(0, 60).map((c) => ({ value: String(c.code), label: c.name }))
+  } else if (!numeric && !/date/.test(field.type ?? '')) {
+    const cats = categoryStats(entry.layer, field)
+    const rows = ('rows' in cats && cats.rows) || []
+    const uv = ((entry.layer.renderer as { uniqueValueInfos?: { value: unknown; label?: string }[] } | null)?.uniqueValueInfos ?? [])
+    const label = (code: unknown) =>
+      uv.find((u) => String(u.value) === String(code))?.label ?? (code === null || code === '' ? '(no value)' : String(code))
+    if ('pending' in cats && cats.pending) note = 'Reading the values…'
+    else if (!rows.length) note = 'The values for this field could not be read.'
+    else if (rows.length > 60) note = `${rows.length.toLocaleString()} distinct values; use the attribute table to search them.`
+    else options = rows.map((r) => ({ value: String(r.code), label: `${label(r.code)} (${r.count.toLocaleString()})` }))
+  }
+
+  if (options) {
+    if (fv.code !== undefined && fv.code !== '__all') note = `Showing ${options.find((o) => o.value === fv.code)?.label ?? fv.code}.`
     control = (
       <select
         className="sc-select"
@@ -547,19 +560,18 @@ function FilterControl({
             code: e.target.value === '__all' ? undefined : e.target.value,
             lo: undefined,
             hi: undefined,
-            text: '',
           })
         }
       >
-        <option value="__all">All values ({domain.length})</option>
-        {domain.slice(0, 60).map((c: { name: string; code: string | number }) => (
-          <option key={String(c.code)} value={String(c.code)}>
-            {c.name}
+        <option value="__all">All values ({options.length})</option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
           </option>
         ))}
       </select>
     )
-  } else if (/double|single|integer|small-integer|long|oid/.test(field.type ?? '')) {
+  } else if (numeric) {
     const st = numericStats(entry.layer, field)
     if (st.pending || st.failed || typeof st.min !== 'number' || typeof st.max !== 'number') {
       note = st.failed ? 'The value range for this field could not be read.' : 'Reading the value range…'
@@ -587,8 +599,8 @@ function FilterControl({
           </div>
           {(
             [
-              ['Min', lo, (v: number) => onFilter(entry, field, { lo: Math.min(v, hi), hi, code: undefined, text: '' })],
-              ['Max', hi, (v: number) => onFilter(entry, field, { hi: Math.max(v, lo), lo, code: undefined, text: '' })],
+              ['Min', lo, (v: number) => onFilter(entry, field, { lo: Math.min(v, hi), hi, code: undefined })],
+              ['Max', hi, (v: number) => onFilter(entry, field, { hi: Math.max(v, lo), lo, code: undefined })],
             ] as const
           ).map(([label, val, set]) => (
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -615,26 +627,6 @@ function FilterControl({
     }
   } else if (/date/.test(field.type ?? '')) {
     note = 'Date filtering is coming; this field publishes dates.'
-  } else {
-    note = `Free-text match on ${field.alias || field.name}.`
-    control = (
-      <input
-        value={fv.text ?? ''}
-        placeholder="Contains…"
-        aria-label={`Filter ${entry.title} by ${attrLabel} text`}
-        onChange={(e) => onFilter(entry, field, { text: e.target.value, code: undefined, lo: undefined, hi: undefined })}
-        style={{
-          height: 28,
-          width: '100%',
-          border: '1px solid var(--sc-input-border)',
-          background: '#fff',
-          padding: '0 7px',
-          font: '400 11.5px/1 var(--sc-font)',
-          color: 'var(--sc-text)',
-          borderRadius: 2,
-        }}
-      />
-    )
   }
 
   return (

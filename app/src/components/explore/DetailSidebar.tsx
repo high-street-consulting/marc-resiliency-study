@@ -23,11 +23,13 @@ export function DetailSidebar({
   activeAttrField,
   onClose,
   onOpenTable,
+  onOpenZones,
 }: {
   selected: SelectedFeature
   activeAttrField: string | undefined
   onClose: () => void
   onOpenTable: () => void
+  onOpenZones?: () => void
 }) {
   useStatsVersion()
   const sel = selected
@@ -343,6 +345,14 @@ export function DetailSidebar({
         >
           Zoom to
         </button>
+        {onOpenZones && (
+          <>
+            <div style={{ flex: 1 }} />
+            <button className="sc-link-btn" onClick={onOpenZones}>
+              Open in Stranded Zones
+            </button>
+          </>
+        )}
       </div>
     </aside>
   )

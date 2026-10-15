@@ -4,7 +4,10 @@ import math
 import os
 import re
 import sys
+import time
 from collections import defaultdict
+
+import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import common
@@ -59,36 +62,71 @@ def radius_for(highway, lk):
     return lk["radius_m"]["other"]
 
 
-def locate(edges, routes_fc, sr, scratch, max_radius_m):
-    # LocateFeaturesAlongRoutes for edge start/end/mid points; returns {(edge_id, pt): [(rid, meas, dist_m)]}
+def read_route_segments(routes_fc):
+    # Route segments within parts: route ids, start/end x, y, m (route CRS units, miles for M).
     import arcpy
-    pts = os.path.join(scratch, "link_edge_points")
-    common.write_rows(pts, [("edge_id", "TEXT", 40), ("pt", "TEXT", 1)],
-                      ([arcpy.PointGeometry(p, sr), eid, k] for eid, e in edges.items() for k, p in e["pts"].items()),
-                      "POINT", sr)
-    loc = os.path.join(scratch, "link_point_locations")
-    arcpy.lr.LocateFeaturesAlongRoutes(pts, routes_fc, RID, f"{max_radius_m} Meters", loc,
-                                       f"{RID} POINT meas", "ALL", "DISTANCE", "ZERO", "FIELDS")
-    found = defaultdict(list)
+    rids, segs, nonmono = [], [], 0
+    for rid, shp in arcpy.da.SearchCursor(routes_fc, [RID, "SHAPE@"]):
+        r = len(rids)
+        rids.append(rid)
+        for part in shp:
+            pts = np.array([(p.X, p.Y, p.M if p.M is not None else np.nan) for p in part if p is not None])
+            if len(pts) < 2:
+                continue
+            nonmono += int(np.any(np.diff(pts[:, 2]) < -1e-6))
+            segs.append(np.column_stack([np.full(len(pts) - 1, r), pts[:-1], pts[1:]]))
+    segs = np.vstack(segs)
+    segs = segs[~np.isnan(segs[:, [3, 6]]).any(axis=1)]
+    if nonmono:
+        print(f"  {nonmono} route parts with decreasing M")
+    return rids, segs  # columns: route, x0, y0, m0, x1, y1, m1
+
+
+def locate(edges, routes_fc, sr, max_radius_m, step_m=10.0):
+    # cKDTree over route vertices densified to step_m; exact projection onto candidate segments.
+    # Returns ({(edge_id, pt): [(rid, meas, dist_m)]}, {(rid, meas): bearing in increasing-M direction}).
+    from scipy.spatial import cKDTree
     mpu = sr.metersPerUnit
-    for eid, pt, rid, meas, dist in arcpy.da.SearchCursor(loc, ["edge_id", "pt", RID, "meas", "Distance"]):
-        found[(eid, pt)].append((rid, meas, abs(dist) * mpu))
-    return found, [pts, loc]
+    t0 = time.perf_counter()
+    rids, segs = read_route_segments(routes_fc)
+    t1 = time.perf_counter()
+    dx, dy = segs[:, 4] - segs[:, 1], segs[:, 5] - segs[:, 2]
+    seg_len = np.hypot(dx, dy)
+    n = np.maximum(1, np.ceil(seg_len * mpu / step_m)).astype(np.int64)
+    seg_of = np.repeat(np.arange(len(segs)), n)
+    frac = (np.arange(n.sum()) - np.repeat(np.cumsum(n) - n, n)) / np.repeat(n, n)
+    tree = cKDTree(np.column_stack([segs[seg_of, 1] + frac * dx[seg_of], segs[seg_of, 2] + frac * dy[seg_of]]))
+    t2 = time.perf_counter()
 
-
-def route_angles(mid_events, routes_fc, scratch):
-    # Tangent angle of each route (increasing-measure direction) at the given measures.
-    import arcpy
-    tbl = os.path.join(scratch, "link_mid_events")
-    keys = list(mid_events)
-    common.write_rows(tbl, [("k", "LONG", None), (RID, "TEXT", 32), ("meas", "DOUBLE", None)],
-                      ([i, rid, m] for i, (rid, m) in enumerate(keys)))
-    lyr = arcpy.lr.MakeRouteEventLayer(routes_fc, RID, tbl, f"{RID} POINT meas", "link_mid_lyr", None,
-                                       "NO_ERROR_FIELD", "ANGLE_FIELD", "TANGENT", "ANGLE").getOutput(0)
-    # TANGENT LOC_ANGLE points against increasing measure (east-running route reads 180); flip it.
-    out = {keys[k]: (ang + 180) % 360 for k, ang in arcpy.da.SearchCursor(lyr, ["k", "LOC_ANGLE"])}
-    arcpy.management.Delete(lyr)
-    return out, [tbl]
+    keys = [(eid, k) for eid, e in edges.items() for k in "SEM"]
+    pts = np.array([(edges[eid]["pts"][k].X, edges[eid]["pts"][k].Y) for eid, k in keys])
+    hits = tree.query_ball_point(pts, r=(max_radius_m + step_m) / mpu)
+    counts = np.fromiter((len(h) for h in hits), dtype=np.int64, count=len(hits))
+    p_idx = np.repeat(np.arange(len(keys)), counts)
+    s_idx = seg_of[np.fromiter((i for h in hits for i in h), dtype=np.int64, count=int(counts.sum()))]
+    pair = np.unique(p_idx * len(segs) + s_idx)
+    p_idx, s_idx = pair // len(segs), pair % len(segs)
+    px, py = pts[p_idx, 0], pts[p_idx, 1]
+    sdx, sdy, L2 = dx[s_idx], dy[s_idx], np.maximum(seg_len[s_idx] ** 2, 1e-12)
+    t = np.clip(((px - segs[s_idx, 1]) * sdx + (py - segs[s_idx, 2]) * sdy) / L2, 0, 1)
+    dist = np.hypot(segs[s_idx, 1] + t * sdx - px, segs[s_idx, 2] + t * sdy - py) * mpu
+    meas = segs[s_idx, 3] + t * (segs[s_idx, 6] - segs[s_idx, 3])
+    route = segs[s_idx, 0].astype(np.int64)
+    ang = np.degrees(np.arctan2(sdy, sdx)) + np.where(segs[s_idx, 6] < segs[s_idx, 3], 180.0, 0.0)
+    ok = dist <= max_radius_m
+    p_idx, route, dist, meas, ang = p_idx[ok], route[ok], dist[ok], meas[ok], ang[ok] % 360
+    order = np.lexsort((dist, route, p_idx))
+    p_idx, route, dist, meas, ang = p_idx[order], route[order], dist[order], meas[order], ang[order]
+    first = np.ones(len(p_idx), dtype=bool)
+    first[1:] = (p_idx[1:] != p_idx[:-1]) | (route[1:] != route[:-1])
+    found, angles = defaultdict(list), {}
+    for i, r, d, m, a in zip(p_idx[first].tolist(), route[first].tolist(), dist[first].tolist(),
+                             meas[first].tolist(), ang[first].tolist()):
+        found[keys[i]].append((rids[r], m, d))
+        angles[(rids[r], m)] = a
+    print(f"locate: read {t1 - t0:.1f} s ({len(segs)} segments), tree {t2 - t1:.1f} s "
+          f"({len(seg_of)} samples), query {time.perf_counter() - t2:.1f} s ({len(keys)} points)")
+    return found, angles
 
 
 def route_attrs(routes_fc):
@@ -119,24 +157,22 @@ def match(edges, found, angles, rattrs, lk, ramp_ft):
                 continue
             for s in (c for c in near["S"] if c[0] == rid):
                 for t in (c for c in near["E"] if c[0] == rid):
-                    with_m = t[1] >= s[1]
-                    if e["oneway"] and ra.get("facility_type") in directional:
-                        travel_with_m = with_m != e["reverse"]
-                        if not travel_with_m or angle_diff(e["angle"], r_ang, 360) > lk["bearing_deg"]:
-                            continue
-                    elif angle_diff(e["angle"], r_ang, 180) > lk["bearing_deg"]:
+                    if angle_diff(e["angle"], r_ang, 180) > lk["bearing_deg"]:
                         continue
+                    # One-way edge on a directional route: prefer travel with increasing measure. Not required:
+                    # some non-inventory routes (Facility_Type 6, e.g. KS I-435) are measured against travel.
+                    dir_ok = not (e["oneway"] and ra.get("facility_type") in directional) or                         ((t[1] >= s[1]) != e["reverse"])
                     span = abs(t[1] - s[1])
                     span_ok = e["len_mi"] > 0 and abs(span - e["len_mi"]) / e["len_mi"] <= lk["span_tolerance"]
                     ref_ok = ra.get("number") in ref_numbers(e["ref"]) if ra.get("number") else False
                     name_sim = difflib.SequenceMatcher(None, norm_name(e["name"]), norm_name(ra.get("name"))).ratio() \
                         if e["name"] and ra.get("name") else 0.0
-                    score = (span_ok, ref_ok, round(name_sim, 2), -angle_diff(e["angle"], r_ang, 180),
+                    score = (span_ok, ref_ok, round(name_sim, 2), dir_ok, -angle_diff(e["angle"], r_ang, 180),
                              -(s[2] + t[2] + mid[2]))
                     if best is None or score > best[0]:
                         best = (score, rid, s[1], t[1])
         if best:
-            (span_ok, ref_ok, name_sim, _, _), rid, m0, m1 = best
+            (span_ok, ref_ok, name_sim, *_), rid, m0, m1 = best
             method = "span" if span_ok else "radius"
             quality = "high" if span_ok and (ref_ok or name_sim >= 0.8) else "medium" if span_ok else "low"
             results[eid] = (rid, m0, m1, quality, method)
@@ -148,9 +184,7 @@ def link(edges_fc, routes_fc, events_table, cfg, scratch, keep):
     lk = cfg["linkage"]
     sr = arcpy.Describe(edges_fc).spatialReference
     edges = edge_geometry(edges_fc, sr.metersPerUnit)
-    found, temps = locate(edges, routes_fc, sr, scratch, max(lk["radius_m"].values()))
-    mids = {(rid, m) for (eid, pt), cs in found.items() if pt == "M" for rid, m, _ in cs}
-    angles, t2 = route_angles(mids, routes_fc, scratch)
+    found, angles = locate(edges, routes_fc, sr, max(lk["radius_m"].values()))
     results = match(edges, found, angles, route_attrs(routes_fc), lk, cfg["hpms"]["ramp_facility_type"])
 
     existing = {f.name for f in arcpy.ListFields(edges_fc)}
@@ -166,7 +200,6 @@ def link(edges_fc, routes_fc, events_table, cfg, scratch, keep):
                                      ("lrs_match_quality", "TEXT", 8), ("lrs_match_method", "TEXT", 8)],
                       ([eid, rid, min(a, b), max(a, b), int(b >= a), q, m]
                        for eid, (rid, a, b, q, m) in results.items()))
-    common.cleanup(temps + t2, keep)
     return edges, results
 
 

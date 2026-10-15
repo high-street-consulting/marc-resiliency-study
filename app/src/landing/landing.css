@@ -123,83 +123,6 @@ p {
   height: 56px;
   width: auto;
 }
-.site-nav {
-  display: flex;
-  gap: 28px;
-  flex: 1;
-  justify-content: center;
-}
-.site-nav a {
-  display: flex;
-  align-items: center;
-  padding-top: 3px;
-  border-bottom: 3px solid transparent;
-  font: 500 13px/1 var(--font);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #1a1a1a;
-  text-decoration: none;
-}
-.site-nav a:hover {
-  border-bottom-color: var(--hairline);
-}
-.site-nav a[aria-current] {
-  border-bottom-color: var(--crimson);
-}
-.site-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.site-actions .btn {
-  padding: 9px 16px;
-}
-.menu-btn {
-  display: none;
-  align-items: center;
-  gap: 8px;
-  align-self: center;
-  margin-left: auto;
-  height: 44px;
-  padding: 0 12px;
-  border: 2px solid var(--crimson);
-  border-radius: 2px;
-  background: #fff;
-  color: var(--crimson);
-  font: 500 13px/1 var(--font);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.menu-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.menu-bars i {
-  width: 16px;
-  height: 2px;
-  background: var(--crimson);
-}
-.site-nav-phone[hidden] {
-  display: none;
-}
-.site-nav-phone {
-  display: flex;
-  flex-direction: column;
-  border-bottom: 1px solid var(--hairline);
-}
-.site-nav-phone a {
-  padding: 14px 20px;
-  border-top: 1px solid var(--hairline);
-  font: 500 15px/1 var(--font);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #1a1a1a;
-  text-decoration: none;
-}
-.site-nav-phone a[aria-current] {
-  color: var(--crimson);
-}
 
 /* Hero */
 .hero {
@@ -286,27 +209,6 @@ p {
   font-size: 16px;
   line-height: 25px;
 }
-.modules {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid var(--hairline);
-}
-.modules li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--hairline);
-  font-size: 16px;
-}
-.mod-name {
-  font-weight: 500;
-}
-.mod-name.muted {
-  font-weight: 400;
-  color: var(--text-2);
-}
 
 /* Tags */
 .tag {
@@ -324,15 +226,6 @@ p {
   background: var(--teal);
   border-color: var(--teal);
   color: #fff;
-}
-.tag-gold {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: var(--text);
-}
-.tag-dashed {
-  border: 1px dashed var(--input);
-  color: var(--text-2);
 }
 .tag-plan {
   background: var(--crimson);
@@ -371,53 +264,25 @@ p {
   font-size: 22px;
   letter-spacing: 0.04em;
 }
-.phases {
+.about-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 72ch;
+  gap: 32px;
 }
-.phase {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--hairline);
-}
-.phase-bar {
-  height: 4px;
-}
-.phase-bar-track {
-  display: flex;
-  background: var(--hairline);
-}
-.phase-bar-track span {
-  display: block;
-  height: 100%;
-}
-.phase-body {
+.about-grid > div {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 24px;
 }
-.phase-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-.phase h3 {
+.about-grid h3 {
   font-size: 19px;
   line-height: 25px;
 }
-.phase p {
+.about-grid p,
+.about-cta {
   font-size: 15px;
   line-height: 23px;
-}
-.phase-links {
-  display: flex;
-  gap: 24px;
-  margin-top: 4px;
-  font-size: 15px;
-  font-weight: 500;
 }
 
 /* Directory */
@@ -699,13 +564,6 @@ p {
   :root {
     --gutter: 24px;
   }
-  .site-nav,
-  .site-actions {
-    display: none;
-  }
-  .menu-btn {
-    display: flex;
-  }
   .site-header {
     height: 68px;
   }
@@ -742,12 +600,6 @@ p {
   .featured h2 {
     font-size: 22px;
     line-height: 27px;
-  }
-  .phases {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .phase-meta {
-    flex-wrap: wrap;
   }
   .directory {
     padding: 40px var(--gutter) 56px;
@@ -796,10 +648,5 @@ p {
   .footer-base {
     flex-direction: column;
     gap: 12px;
-  }
-}
-@media (min-width: 1101px) {
-  .site-nav-phone {
-    display: none;
   }
 }

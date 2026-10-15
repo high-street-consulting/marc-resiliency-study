@@ -2,6 +2,7 @@
 import os
 import pickle
 import sys
+import time
 from collections import defaultdict, deque
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -17,7 +18,7 @@ FACILITY_LAYERS = [
 
 
 def scenario_name(s):
-    return f"rp{s['return_period']}_{s['year']}" + (f"_{s['ssp']}" if s["year"] != "cur" else "")
+    return s.get("name") or f"rp{s['return_period']}_{s['year']}" + (f"_{s['ssp']}" if s["year"] != "cur" else "")
 
 
 def depth_column(s):
@@ -126,6 +127,42 @@ def detours(g, dg_open, closed):
     return out
 
 
+def redundancy(g, edge_ids, cutoff_mi):
+    # Baseline: drop one edge at a time, shortest surviving path between its ends in travel direction.
+    # Returns {edge_id: detour_mi or None when no path within the cutoff}.
+    import networkx as nx
+    dg = directed(g)
+    cutoff = cutoff_mi * M_PER_MI
+    data = {k: d for _, _, k, d in g.edges(keys=True, data=True)}
+    out = {}
+    for k in edge_ids:
+        d = data.get(k)
+        if d is None or d["u"] == d["v"]:  # self-loops (closed ways split once) have no endpoints to reconnect
+            continue
+        s, t = (d["v"], d["u"]) if (d.get("oneway") or "") == "-1" else (d["u"], d["v"])
+        removed = [(a, b) for a, b in ((d["u"], d["v"]), (d["v"], d["u"])) if dg.has_edge(a, b, key=k)]
+        for a, b in removed:
+            dg.remove_edge(a, b, key=k)
+        try:
+            length, _ = nx.single_source_dijkstra(dg, s, t, cutoff=cutoff, weight="length_m")
+            out[k] = length / M_PER_MI
+        except nx.NetworkXNoPath:
+            out[k] = None
+        for a, b in removed:
+            dg.add_edge(a, b, key=k, length_m=d["length_m"])
+    return out
+
+
+def tier1_edges(edge_events, sections_fc):
+    # Linked edges whose route span overlaps a scored (Tier 1) section; HPMS also carries local roads.
+    import arcpy
+    import lrs
+    edges = [(e, r, a, b) for e, r, a, b in arcpy.da.SearchCursor(edge_events, ["edge_id", "route_id", "from_m", "to_m"])]
+    secs = [(r, a, b, {"t1": 1}) for r, a, b in arcpy.da.SearchCursor(sections_fc, ["route_id", "begin_point", "end_point"])]
+    hit = lrs.aggregate(edges, secs, {"t1": "max"})
+    return [e for e, v in hit.items() if v["t1"]]
+
+
 def centrality(g, k, seed):
     import networkx as nx
     dg = directed(g)
@@ -162,10 +199,17 @@ def zone_profile(edge_ids, edge_len, edge_tract, tract_len, tracts, facility_edg
     }
 
 
+def closed_edges(depths, threshold_ft):
+    return frozenset(k for k, v in depths.items() if v is not None and v > threshold_ft)
+
+
 def analyze_scenario(g, closed, edge_tract=None, tract_len=None, tracts=None, facility_edges=None):
     edge_len = {k: d["length_m"] for _, _, k, d in g.edges(keys=True, data=True)}
     h = open_undirected(g, closed)
     main, comps = stranded_zones(h)
+    # OSM islands disconnected at baseline (0.3% of miles) are data fragments, not zones a closure cut off.
+    base_main, _ = stranded_zones(open_undirected(g, frozenset()))
+    comps = [c for c in comps if c <= base_main]
     zones = []
     for nodes in comps:
         zones.append(("stranded", nodes, None))
@@ -204,7 +248,8 @@ def edge_depths(cfg, scenarios):
             "No flood depths keyed on OSM edge_id. The ICF HAZ table is keyed on the old Tier 1 asset_id; "
             "set [analysis] edge_depth_table in config/build.toml to a table with edge_id and "
             + ", ".join(depth_column(s) for s in scenarios))
-    cols = [depth_column(s) for s in scenarios]
+    have = {f.name for f in arcpy.ListFields(path)}
+    cols = [c for c in (depth_column(s) for s in scenarios) if c in have]
     out = {c: {} for c in cols}
     for row in arcpy.da.SearchCursor(path, ["edge_id"] + cols):
         for c, v in zip(cols, row[1:]):
@@ -250,11 +295,21 @@ def spatial_inputs(cfg, edges_fc, scratch, keep):
     return edge_tract, tracts, facility_edges
 
 
-def write_outputs(gdb, edges_fc, name, edges, zones, det):
+def write_outputs(gdb, edges_fc, name, runs):
+    # runs: [(threshold_ft, edges, zones, det)]; every output carries all steps, keyed by threshold_ft.
     import arcpy
     sr = arcpy.Describe(edges_fc).spatialReference
-    need = {e for z in zones for e in z["edge_ids"]} | {e for _, keys in det.values() for e in keys}
+    closed = {thr: [k for k, r in edges.items() if r["closed"]] for thr, edges, _, _ in runs}
+    need = set()
+    for thr, _, zones, det in runs:
+        need |= {e for z in zones for e in z["edge_ids"]} | {e for _, keys in det.values() for e in keys} | set(closed[thr])
     shapes = {eid: shp for eid, shp in arcpy.da.SearchCursor(edges_fc, ["edge_id", "SHAPE@"]) if eid in need}
+    thr_f = ("threshold_ft", "DOUBLE", None)
+    common.write_rows(os.path.join(gdb, f"closed_edges_{name}"),
+                      [thr_f, ("edge_id", "TEXT", 40), ("detour_mi", "DOUBLE", None), ("no_detour", "SHORT", None)],
+                      ([shapes[k], thr, k, edges[k]["detour_mi"], int(edges[k]["detour_mi"] is None)]
+                       for thr, edges, _, _ in runs for k in closed[thr]),
+                      "POLYLINE", sr)
 
     def union(ids):
         parts = arcpy.Array()
@@ -264,57 +319,100 @@ def write_outputs(gdb, edges_fc, name, edges, zones, det):
         return arcpy.Polyline(parts, sr)
 
     common.write_rows(os.path.join(gdb, f"edge_results_{name}"),
-                      [("edge_id", "TEXT", 40), ("closed", "SHORT", None), ("stranded", "SHORT", None),
+                      [thr_f, ("edge_id", "TEXT", 40), ("closed", "SHORT", None), ("stranded", "SHORT", None),
                        ("zone_id", "LONG", None), ("detour_mi", "DOUBLE", None)],
-                      ([k, r["closed"], r["stranded"], r["zone_id"], r["detour_mi"]] for k, r in edges.items()))
+                      ([thr, k, r["closed"], r["stranded"], r["zone_id"], r["detour_mi"]]
+                       for thr, edges, _, _ in runs for k, r in edges.items()))
     zfields = [("zone_id", "LONG", None), ("zone_type", "TEXT", 16), ("egress_baseline", "LONG", None),
                ("egress_scenario", "LONG", None), ("single_egress", "SHORT", None), ("miles", "DOUBLE", None),
                ("population", "DOUBLE", None), ("jobs", "DOUBLE", None), ("facilities", "LONG", None),
                ("elderly_share", "DOUBLE", None), ("child_share", "DOUBLE", None),
                ("mobility_disab_share", "DOUBLE", None)]
-    common.write_rows(os.path.join(gdb, f"stranded_zones_{name}"), zfields,
-                      ([union(z["edge_ids"])] + [z[f[0]] for f in zfields] for z in zones if z["edge_ids"]),
+    common.write_rows(os.path.join(gdb, f"stranded_zones_{name}"), [thr_f] + zfields,
+                      ([union(z["edge_ids"]), thr] + [z[f[0]] for f in zfields]
+                       for thr, _, zones, _ in runs for z in zones if z["edge_ids"]),
                       "POLYLINE", sr)
     common.write_rows(os.path.join(gdb, f"detours_{name}"),
-                      [("closed_edge_id", "TEXT", 40), ("detour_mi", "DOUBLE", None), ("path_edges", "LONG", None)],
-                      ([union(keys), k, mi, len(keys)] for k, (mi, keys) in det.items() if keys), "POLYLINE", sr)
+                      [thr_f, ("closed_edge_id", "TEXT", 40), ("detour_mi", "DOUBLE", None), ("path_edges", "LONG", None)],
+                      ([union(keys), thr, k, mi, len(keys)] for thr, _, _, det in runs for k, (mi, keys) in det.items() if keys),
+                      "POLYLINE", sr)
 
 
-def run(cfg=None):
+def run(cfg=None, scenarios_only=False):
+    import arcpy
     cfg = cfg or common.load_config()
     a = cfg["analysis"]
+    assert a["depth_threshold_ft"] in a["depth_thresholds_ft"], "depth_threshold_ft must be one of depth_thresholds_ft"
     scratch, keep = common.setup_scratch(cfg)
     gdb = common.repo_path(cfg["paths"]["build_gdb"])
     edges_fc = os.path.join(gdb, "osm_edges")
     with open(common.repo_path(cfg["paths"]["graph_pickle"]), "rb") as f:
         g = pickle.load(f)
-    depths = edge_depths(cfg, a["scenarios"])
+    linked = os.path.join(gdb, "edge_lrs_events")
+    if scenarios_only:
+        print("skip baseline redundancy and centrality (--scenarios-only)")
+    elif arcpy.Exists(linked):
+        t0 = time.perf_counter()
+        ids = tier1_edges(linked, os.path.join(gdb, "scored_sections"))
+        red = redundancy(g, ids, a["redundancy_cutoff_mi"])
+        common.write_rows(os.path.join(gdb, "edge_redundancy"),
+                          [("edge_id", "TEXT", 40), ("redundancy_detour_mi", "DOUBLE", None), ("redundancy_no_path", "SHORT", None)],
+                          ([k, v, int(v is None)] for k, v in red.items()))
+        none = sum(1 for v in red.values() if v is None)
+        print(f"redundancy: {len(red)} Tier 1 edges in {time.perf_counter() - t0:.0f} s; "
+              f"no path within {a['redundancy_cutoff_mi']} mi: {none} ({none / max(len(red), 1):.1%})")
+    else:
+        print(f"skip redundancy: no {linked}")
+    if not scenarios_only:
+        t0 = time.perf_counter()
+        cent = centrality(g, a["centrality_k"], a["seed"])
+        common.write_rows(os.path.join(gdb, "edge_centrality"), [("edge_id", "TEXT", 40), ("centrality", "DOUBLE", None)],
+                          ([k, v] for k, v in cent.items()))
+        print(f"centrality: k={a['centrality_k']} in {time.perf_counter() - t0:.0f} s")
+    _run_scenarios(cfg, g, edges_fc, scratch, keep)
+
+
+def _run_scenarios(cfg, g, edges_fc, scratch, keep):
+    import arcpy
+    a = cfg["analysis"]
+    gdb = common.repo_path(cfg["paths"]["build_gdb"])
+    # Scenarios need flood depths keyed on edge_id; baseline outputs above do not.
+    try:
+        depths = edge_depths(cfg, a["scenarios"])
+    except RuntimeError as e:
+        print(f"skip scenarios: {e}")
+        return
     edge_tract, tracts, facility_edges = spatial_inputs(cfg, edges_fc, scratch, keep)
     tract_len = defaultdict(float)
     for _, _, k, d in g.edges(keys=True, data=True):
         if edge_tract.get(k):
             tract_len[edge_tract[k]] += d["length_m"]
-
-    cent = centrality(g, a["centrality_k"], a["seed"])
-    common.write_rows(os.path.join(gdb, "edge_centrality"), [("edge_id", "TEXT", 40), ("centrality", "DOUBLE", None)],
-                      ([k, v] for k, v in cent.items()))
     for s in a["scenarios"]:
         name = scenario_name(s)
+        if depth_column(s) not in depths:
+            print(f"skip {name}: no column {depth_column(s)} in the edge depth table")
+            continue
         col = depths[depth_column(s)]
-        closed = frozenset(k for k, v in col.items() if v is not None and v > a["depth_threshold_ft"])
-        edges, zones, det = analyze_scenario(g, closed, edge_tract, tract_len, tracts, facility_edges)
-        write_outputs(gdb, edges_fc, name, edges, zones, det)
-        n_str = sum(1 for z in zones if z["zone_type"] == "stranded")
-        print(f"{name}: closed {len(closed)} edges, {n_str} stranded zones, "
-              f"{len(zones) - n_str} single-egress zones")
+        runs = []
+        # ponytail: full rerun per step; reuse higher-step components if ladder grows past ~10
+        for thr in a["depth_thresholds_ft"]:
+            closed = closed_edges(col, thr)
+            edges, zones, det = analyze_scenario(g, closed, edge_tract, tract_len, tracts, facility_edges)
+            runs.append((thr, edges, zones, det))
+            n_str = sum(1 for z in zones if z["zone_type"] == "stranded")
+            print(f"{name} @ {thr} ft: closed {len(closed)} edges, {n_str} stranded zones, "
+                  f"{len(zones) - n_str} single-egress zones")
+        write_outputs(gdb, edges_fc, name, runs)
         common.write_metadata(
             os.path.join(gdb, f"stranded_zones_{name}"), f"Stranded zones, {name}",
-            "Dated snapshot: OSM edges with Fathom depth above threshold closed; zones cut off (stranded) or left "
+            "Dated snapshot: OSM edges with flood depth above threshold closed; zones cut off (stranded) or left "
             "on one surviving edge (single egress). Detour length is the Phase 2 proxy for disruption impact.",
-            ["osm_edges", "Fathom depths (project only)", "MARC Forecast2050 tracts", "CDC PLACES", "ACS 2024 5-year B01001"],
-            {"depth_threshold_ft": a["depth_threshold_ft"], **s}, [f"edge_results_{name}", f"detours_{name}"],
+            ["osm_edges", "edge flood depths (FEMA NFHL method test; Fathom, project only)", "MARC Forecast2050 tracts",
+             "CDC PLACES", "ACS 2024 5-year B01001"],
+            {"depth_thresholds_ft": a["depth_thresholds_ft"], "depth_threshold_ft": a["depth_threshold_ft"], **s},
+            [f"edge_results_{name}", f"closed_edges_{name}", f"detours_{name}"],
             "run_network_analysis.py")
 
 
 if __name__ == "__main__":
-    run()
+    run(scenarios_only="--scenarios-only" in sys.argv)

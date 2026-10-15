@@ -65,6 +65,9 @@ import {
   WEB_MAP_BASEMAP_ID,
   REFERENCE_LAYER_TITLES,
   DEFAULT_VIEW,
+  SCENARIO_STORY,
+  DEFAULT_THRESHOLD_FT,
+  ZONES_TAB_SECTIONS,
 } from '../config/registry'
 
 /** One symbology choice — a child of an exclusive group layer. The child's
@@ -127,6 +130,7 @@ type Events = {
   boundaries: BoundaryOption[]
   areaGeometry: Geometry | null
   sketchActive: boolean
+  threshold: number | null
 }
 
 type Listener<K extends keyof Events> = (v: Events[K]) => void
@@ -155,10 +159,14 @@ export class MapController {
   /** Active attribute filter per catalog entry — replayed onto a group's
    *  newly visible child so switching symbology never drops the filter. */
   private defExpr = new Map<string, string>()
+  // Closure depth (ft) the scenario rows are filtered to; ANDed onto their attribute filter.
+  private thresholdFt: number | null = null
   private groupWatches: { remove(): void }[] = []
   private legend: Legend | null = null
   private legendEl: HTMLDivElement | null = null
   private pendingLegendTarget: HTMLElement | null = null
+  private tab: 'explore' | 'zones' = 'explore'
+  private pendingZoom: Geometry | null = null
 
   constructor() {
     this.container = document.createElement('div')
@@ -214,6 +222,7 @@ export class MapController {
     // MapView loads every layer its map contains, so the map must be lean by
     // the time one is attached to it.
     this.buildCatalog()
+    this.setThreshold(DEFAULT_THRESHOLD_FT)
 
     webmap.add(this.sketchLayer)
 
@@ -278,6 +287,22 @@ export class MapController {
     })
   }
 
+  setTab(tab: 'explore' | 'zones'): void {
+    this.tab = tab
+    this.applyTabVisibility()
+    // Layers that just joined the map need the area filter re-asserted.
+    void this.applyFilters()
+    const g = this.pendingZoom
+    if (g) {
+      this.pendingZoom = null
+      requestAnimationFrame(() => this.zoomTo(g, true))
+    }
+  }
+
+  queueZoom(g: Geometry | null): void {
+    this.pendingZoom = g
+  }
+
   /** Move the map canvas into a mount point. */
   attach(target: HTMLElement | null): void {
     if (!target) return
@@ -301,9 +326,10 @@ export class MapController {
     // A section group gates everything beneath it, so a collapsed section draws
     // nothing regardless of what its rows say — and re-expanding restores them
     // untouched, because hiding the parent never rewrites a child's own
-    // visibility.
+    // visibility. The zones tab hides sections here too, never row groups:
+    // syncFromSdk reads a row group's own `visible`, so Explore's rows survive.
     for (const [name, group] of this.sectionGroups)
-      group.visible = !this.closedSections.has(name)
+      group.visible = this.tab === 'zones' ? ZONES_TAB_SECTIONS.test(name) : !this.closedSections.has(name)
   }
 
   /** Tell the controller which catalog sections are expanded. Collapsing a
@@ -639,10 +665,9 @@ export class MapController {
         }
     // definitionExpression is per-layer, so the active attribute filter has to
     // follow the switch or it would silently vanish off the map.
-    const where = this.defExpr.get(e.id)
-    if (where !== undefined) {
+    if (this.defExpr.has(e.id) || e.section === SCENARIO_STORY.section) {
       try {
-        opt.layer.definitionExpression = where
+        opt.layer.definitionExpression = this.whereFor(e)
       } catch {
         /* immutable layer */
       }
@@ -659,8 +684,20 @@ export class MapController {
   setDefinitionExpression(id: string, where: string | null): void {
     const e = this.entries.find((x) => x.id === id)
     if (!e) return
-    const w = where ?? ''
-    this.defExpr.set(e.id, w)
+    this.defExpr.set(e.id, where ?? '')
+    this.applyWhere(e)
+  }
+
+  // Scenario layers hold every depth step, so an empty clause would stack them.
+  private whereFor(e: CatalogEntry): string {
+    const parts = [this.defExpr.get(e.id) ?? '']
+    if (e.section === SCENARIO_STORY.section && this.thresholdFt !== null)
+      parts.push(`${SCENARIO_STORY.thresholdField} = ${this.thresholdFt}`)
+    return parts.filter(Boolean).map((p) => `(${p})`).join(' AND ')
+  }
+
+  private applyWhere(e: CatalogEntry): void {
+    const w = this.whereFor(e)
     // Fan out across every sibling so the filter survives a symbology switch.
     for (const layer of this.layersOf(e)) {
       try {
@@ -669,6 +706,16 @@ export class MapController {
         /* immutable layer */
       }
     }
+  }
+
+  get threshold(): number | null {
+    return this.thresholdFt
+  }
+
+  setThreshold(v: number): void {
+    this.thresholdFt = v
+    for (const e of this.entries) if (e.section === SCENARIO_STORY.section) this.applyWhere(e)
+    this.emit('threshold', v)
   }
 
   /* ── Feature click / hover (Explore) ── */
@@ -690,17 +737,24 @@ export class MapController {
         return
       }
       const g = hit.graphic
-      const fl = g.layer as FeatureLayer
-      // A hit on a symbology group's child carries the child's title (the
-      // option label); the user knows the layer by the group's title.
-      this.emit('selected', {
-        layerTitle: this.entryForLayerId(String(fl.id))?.title ?? fl.title ?? 'Feature',
-        attrs: g.attributes as Record<string, unknown>,
-        fields: fl.fields ?? [],
-        geometry: g.geometry ?? null,
-        layer: fl,
-      })
+      this.emit('selected', this.toSelected(g.layer as FeatureLayer, g))
     })
+  }
+
+  selectFeature(layer: FeatureLayer, g: Graphic): void {
+    this.emit('selected', this.toSelected(layer, g))
+  }
+
+  private toSelected(fl: FeatureLayer, g: Graphic): SelectedFeature {
+    // A hit on a symbology group's child carries the child's title (the
+    // option label); the user knows the layer by the group's title.
+    return {
+      layerTitle: this.entryForLayerId(String(fl.id))?.title ?? fl.title ?? 'Feature',
+      attrs: g.attributes as Record<string, unknown>,
+      fields: fl.fields ?? [],
+      geometry: g.geometry ?? null,
+      layer: fl,
+    }
   }
 
   private handleHover(ev: any): void {
@@ -976,8 +1030,14 @@ export class MapController {
 
   /** Frame a geometry at segment scale (1:24,000), so a short segment does
    *  not zoom absurdly far in. */
-  zoomTo(geometry: Geometry | null): void {
-    if (geometry && this.view) this.view.goTo({ target: geometry, scale: 24000 } as any).catch(() => undefined)
+  zoomTo(geometry: Geometry | null, fit = false): void {
+    if (geometry && this.view)
+      this.view.goTo((fit ? { target: geometry } : { target: geometry, scale: 24000 }) as any).catch(() => undefined)
+  }
+
+  /** The global area filter's geometry (union of picked boundaries), or null region-wide. */
+  get area(): Geometry | null {
+    return this.areaGeometry
   }
 
   /** PNG data URI of the current map, for the report and the Help dialog's

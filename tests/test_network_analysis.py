@@ -45,14 +45,35 @@ def test_scenarios():
     assert abs(edges["RD_200_0"]["detour_mi"] - expect) < 1e-6 and edges["RD_200_0"]["closed"] == 1
     assert det["RD_200_0"][1] == ["RD_100_1", "RD_201_0", "RD_202_0"]
     assert not any(e["stranded"] for e in edges.values())
-    rna.write_outputs(gdb, fc, "test_single", edges, zones, det)
+    rna.write_outputs(gdb, fc, "test_single", [(0.5, edges, zones, det)])
     assert int(arcpy.management.GetCount(os.path.join(gdb, "detours_test_single"))[0]) == 1
 
     edges, zones, det = rna.analyze_scenario(g, frozenset({"RD_200_0", "RD_201_0"}))
     assert [z["zone_type"] for z in zones] == ["stranded"] and zones[0]["egress_baseline"] == 2
     assert edges["RD_202_0"]["stranded"] == 1 and edges["RD_200_0"]["detour_mi"] is None
-    rna.write_outputs(gdb, fc, "test_stranded", edges, zones, det)
+    rna.write_outputs(gdb, fc, "test_stranded", [(0.5, edges, zones, det)])
     assert int(arcpy.management.GetCount(os.path.join(gdb, "stranded_zones_test_stranded"))[0]) == 1
+
+
+def test_threshold_ladder():
+    depths = {"a": 0.4, "b": 1.2, "c": None}
+    assert rna.closed_edges(depths, 0.5) == {"b"} and rna.closed_edges(depths, 1.5) == frozenset()
+    gdb, fc, g = build()
+    runs = [(0.5, *rna.analyze_scenario(g, frozenset({"RD_200_0"}))),
+            (2.0, *rna.analyze_scenario(g, frozenset({"RD_200_0", "RD_201_0"})))]
+    rna.write_outputs(gdb, fc, "test_ladder", runs)
+    out = os.path.join(gdb, "stranded_zones_test_ladder")
+    assert int(arcpy.management.GetCount(out)[0]) == 2
+    assert sum(1 for _ in arcpy.da.SearchCursor(out, ["OID@"], where_clause="threshold_ft = 2.0")) == 1
+
+
+def test_baseline_island_is_not_stranded():
+    _, _, g = build()
+    g.add_edge(90, 91, key="RD_900_0", u=90, v=91, length_m=100.0, oneway="")  # OSM fragment off the main graph
+    _, zones, _ = rna.analyze_scenario(g, frozenset())
+    assert zones == [], zones
+    _, zones, _ = rna.analyze_scenario(g, frozenset({"RD_200_0", "RD_201_0"}))
+    assert [z["zone_type"] for z in zones] == ["stranded"] and "RD_900_0" not in zones[0]["edge_ids"]
 
 
 def test_oneway_detour_and_centrality():
@@ -66,6 +87,18 @@ def test_oneway_detour_and_centrality():
     assert det["RD_200_0"][0] is None, "both ways from 2 to 3 run against one-ways"
     cent = rna.centrality(g, 50, 42)
     assert set(cent) == {k for _, _, k in g.edges(keys=True)} and cent["RD_203_0"] > 0
+
+
+
+def test_redundancy():
+    _, _, g = build()
+    red = rna.redundancy(g, ["RD_100_0", "RD_203_0"], CFG["analysis"]["redundancy_cutoff_mi"])
+    lens = {k: d["length_m"] for _, _, k, d in g.edges(keys=True, data=True)}
+    three_sides = (lens["RD_100_1"] + lens["RD_100_2"] + lens["RD_100_3"]) / rna.M_PER_MI
+    three_sides_alt = (lens["RD_100_3"] + lens["RD_100_2"] + lens["RD_201_0"] + lens["RD_202_0"] + lens["RD_200_0"]) / rna.M_PER_MI
+    assert abs(red["RD_100_0"] - min(three_sides, three_sides_alt)) < 1e-9 and abs(red["RD_100_0"] - three_sides) < 1e-9
+    assert red["RD_203_0"] is None, "cul-de-sac is a graph bridge: no surviving path"
+    assert g.number_of_edges() == 8 and rna.directed(g).number_of_edges() == 16
 
 
 if __name__ == "__main__":

@@ -108,12 +108,4 @@ clear.addEventListener('click', () => {
   render()
 })
 
-const menuBtn = document.querySelector<HTMLButtonElement>('.menu-btn')!
-const phoneNav = $('site-nav-phone')
-menuBtn.addEventListener('click', () => {
-  const open = phoneNav.hidden
-  phoneNav.hidden = !open
-  menuBtn.setAttribute('aria-expanded', String(open))
-})
-
 render()

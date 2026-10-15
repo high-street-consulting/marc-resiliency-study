@@ -36,9 +36,11 @@ import { useViewport } from './lib/viewport'
 import { Header } from './components/Header'
 import { AreaBar } from './components/AreaBar'
 import { ExploreView } from './components/explore/ExploreView'
+import { ZonesView } from './components/zones/ZonesView'
 import { HelpDialog } from './components/HelpDialog'
+import { MethodologyDialog } from './components/MethodologyDialog'
 import { TablePanel } from './components/TablePanel'
-import { ATTRIBUTION, REFERENCE_LAYER_TITLES } from './config/registry'
+import { ATTRIBUTION, REFERENCE_LAYER_TITLES, DEFAULT_THRESHOLD_FT, THRESHOLDS_FT, SCENARIO_STORY } from './config/registry'
 
 export interface AreaPick {
   group: string
@@ -59,13 +61,18 @@ export default function App() {
   const [selected, setSelected] = useState<SelectedFeature | null>(null)
   const [activeLayerId, setActiveLayerId] = useState<string | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [methodologyOpen, setMethodologyOpen] = useState(false)
   const [tableOpen, setTableOpen] = useState(false)
   const [tableLayerId, setTableLayerId] = useState<string | null>(null)
-  const [shareCopied, setShareCopied] = useState(false)
   const [sketchActive, setSketchActive] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [threshold, setThreshold] = useState<number | null>(controller.threshold)
+  const [tab, setTab] = useState<'explore' | 'zones'>(initial.tab ?? 'explore')
 
   const initialApplied = useRef(false)
+  const tabApplied = useRef<'explore' | 'zones'>('explore')
+  // Rows the zones tab switched on, switched back off on return so Explore comes back as it was.
+  const forcedOn = useRef<string[]>([])
 
   /* ── Controller wiring ── */
   useEffect(() => {
@@ -82,6 +89,7 @@ export default function App() {
       controller.on('selected', setSelected),
       controller.on('boundaries', setBoundaries),
       controller.on('sketchActive', setSketchActive),
+      controller.on('threshold', setThreshold),
     ]
     void controller.init()
     return () => offs.forEach((off) => off())
@@ -117,7 +125,25 @@ export default function App() {
     const firstOn = live.find((l) => l.on && !REFERENCE_LAYER_TITLES.test(l.title)) ?? live.find((l) => l.on)
     setActiveLayerId(firstOn?.id ?? live[0]?.id ?? null)
     if (initial.areas?.length) void controller.applyAreaFilter(initial.areas, null)
+    if (initial.threshold !== undefined && THRESHOLDS_FT.includes(initial.threshold)) controller.setThreshold(initial.threshold)
   }, [layers, initial])
+
+  // After the restore above, so a deep link ?tab=zones lands once the catalog exists.
+  useEffect(() => {
+    if (!layers.length || tabApplied.current === tab) return
+    tabApplied.current = tab
+    controller.setTab(tab)
+    if (tab === 'zones') {
+      const forced = layers.filter(
+        (l) => l.section === SCENARIO_STORY.section && !l.on && (SCENARIO_STORY.zones.title.test(l.title) || SCENARIO_STORY.closed.title.test(l.title)),
+      )
+      for (const l of forced) controller.setLayerVisible(l.id, true)
+      forcedOn.current = forced.map((l) => l.id)
+    } else {
+      for (const id of forcedOn.current) controller.setLayerVisible(id, false)
+      forcedOn.current = []
+    }
+  }, [tab, layers])
 
   /* ── Global area filter ── */
   const applyAreas = useCallback(
@@ -144,21 +170,13 @@ export default function App() {
               .filter((l) => l.activeSymbology && l.defaultSymbology && l.defaultSymbology !== l.activeSymbology)
               .map((l) => [l.id, l.activeSymbology as string]),
           ),
+          threshold: threshold !== null && threshold !== DEFAULT_THRESHOLD_FT ? threshold : undefined,
+          tab,
         })
       history.replaceState(null, '', url || location.pathname)
     }, 300)
     return () => clearTimeout(t)
-  }, [areas, layers])
-
-  const share = useCallback(() => {
-    navigator.clipboard
-      ?.writeText(location.href)
-      .then(() => {
-        setShareCopied(true)
-        setTimeout(() => setShareCopied(false), 2000)
-      })
-      .catch(() => undefined)
-  }, [])
+  }, [areas, layers, threshold, tab])
 
   const openTable = useCallback(
     (layerId?: string | null) => {
@@ -167,6 +185,11 @@ export default function App() {
     },
     [activeLayerId],
   )
+
+  const areaLabel =
+    areas.length || customArea
+      ? [...areas.map((a) => a.name.split(' — ')[0]), ...(customArea ? [customArea.label] : [])].join(', ')
+      : 'Region-wide'
 
   const tablePanel = (
     <TablePanel
@@ -192,7 +215,7 @@ export default function App() {
       <a className="skip-link" href="#main">
         Skip to main content
       </a>
-      <Header onShare={share} shareCopied={shareCopied} onHelp={() => setHelpOpen(true)} vp={vp} />
+      <Header tab={tab} onTab={setTab} onHelp={() => setHelpOpen(true)} onMethodology={() => setMethodologyOpen(true)} vp={vp} />
       <AreaBar
         boundaries={boundaries}
         areas={areas}
@@ -208,35 +231,59 @@ export default function App() {
               aria-expanded={drawerOpen}
               onClick={() => setDrawerOpen((v) => !v)}
             >
-              Layers
+              {tab === 'zones' ? 'Results' : 'Layers'}
             </button>
           ) : null
         }
       />
       <div id="main" style={{ flex: 1, minHeight: 0, display: 'flex' }}>
-        <ExploreView
-          vp={vp}
-          tablePanel={tablePanel}
-          drawerOpen={drawerOpen}
-          onDrawerOpen={setDrawerOpen}
-          layers={layers}
-          loadingLayers={loadingLayers}
-          layersError={layersError}
-          mapError={mapError}
-          activeLayerId={activeLayerId}
-          selected={selected}
-          onActiveLayer={setActiveLayerId}
-          onSymbology={(entryId, optionId) => {
-            setActiveLayerId(entryId)
-            controller.setSymbology(entryId, optionId)
-          }}
-          onToggleLayer={(id, on) => {
-            controller.setLayerVisible(id, on)
-            if (on) setActiveLayerId(id)
-          }}
-          onClearSelected={() => setSelected(null)}
-          onOpenTable={openTable}
-        />
+        {tab === 'explore' ? (
+          <ExploreView
+            vp={vp}
+            tablePanel={tablePanel}
+            drawerOpen={drawerOpen}
+            onDrawerOpen={setDrawerOpen}
+            layers={layers}
+            areaLabel={areaLabel}
+            loadingLayers={loadingLayers}
+            layersError={layersError}
+            mapError={mapError}
+            activeLayerId={activeLayerId}
+            selected={selected}
+            onActiveLayer={setActiveLayerId}
+            onSymbology={(entryId, optionId) => {
+              setActiveLayerId(entryId)
+              controller.setSymbology(entryId, optionId)
+            }}
+            onToggleLayer={(id, on) => {
+              controller.setLayerVisible(id, on)
+              if (on) setActiveLayerId(id)
+            }}
+            onClearSelected={() => setSelected(null)}
+            onOpenTable={openTable}
+            onOpenZones={
+              selected && controller.entryForLayerId(String(selected.layer.id))?.section === SCENARIO_STORY.section
+                ? () => {
+                    setTab('zones')
+                    controller.queueZoom(selected.geometry)
+                  }
+                : undefined
+            }
+          />
+        ) : (
+          <ZonesView
+            vp={vp}
+            tablePanel={tablePanel}
+            drawerOpen={drawerOpen}
+            onDrawerOpen={setDrawerOpen}
+            layers={layers}
+            areaLabel={areaLabel}
+            mapError={mapError}
+            selected={selected}
+            onClearSelected={() => setSelected(null)}
+            onOpenTable={openTable}
+          />
+        )}
       </div>
       <div className="marc-bands" aria-hidden />
       <footer
@@ -255,6 +302,7 @@ export default function App() {
       </footer>
 
       <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <MethodologyDialog open={methodologyOpen} onClose={() => setMethodologyOpen(false)} />
     </div>
   )
 }

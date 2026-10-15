@@ -26,6 +26,9 @@ import webmap from './webmap.json'
 /* ── Data sources ─────────────────────────────────────────────────────── */
 
 export const WEB_MAP_ID: string = webmap.webMapId
+// Closure depth ladder the scenario layers were run at (config/build.toml via build_webmap.py).
+export const THRESHOLDS_FT: number[] = webmap.thresholdsFt
+export const DEFAULT_THRESHOLD_FT: number = webmap.defaultThresholdFt
 
 /* ── Catalog structure ────────────────────────────────────────────────────
    The Explore panel's grouping, its order and its symbology are ALL authored in
@@ -44,6 +47,22 @@ export const WEB_MAP_ID: string = webmap.webMapId
    map — it is a signal, not a category to curate. */
 
 export const UNGROUPED_SECTION = 'Other layers'
+
+/** Scenario story card: the catalog section holding scenario rows, which rows
+ *  carry zones and closed segments, and the fields the headline numbers read.
+ *  Written by `scripts/run_network_analysis.py` (write_outputs). */
+export const SCENARIO_STORY = {
+  section: 'Scenarios',
+  thresholdField: 'threshold_ft',
+  zones: { title: /^stranded zones/i, type: 'zone_type', id: 'zone_id', population: 'population', jobs: 'jobs', facilities: 'facilities', miles: 'miles' },
+  closed: { title: /^closed segments/i, id: 'edge_id', detour: 'detour_mi', noDetour: 'no_detour' },
+}
+
+// Sections drawn on the Stranded Zones tab; Hazards currently holds only the FEMA fill.
+export const ZONES_TAB_SECTIONS = /^(scenarios|hazards|reference)$/i
+
+// Stranded zones CSV column order; matches write_outputs in scripts/run_network_analysis.py.
+export const ZONE_FIELDS = ['threshold_ft', 'zone_id', 'zone_type', 'egress_baseline', 'egress_scenario', 'single_egress', 'miles', 'population', 'jobs', 'facilities', 'elderly_share', 'child_share', 'mobility_disab_share']
 
 /** Reference boundary layers de-prioritized on map click (feature detail). */
 export const REFERENCE_LAYER_TITLES = /^(counties)$/i
@@ -72,7 +91,7 @@ export const BOUNDARY_SETS: BoundarySet[] = [{ group: 'County', layerTitle: 'Cou
 
 /** Initial map view — the Kansas City region. Also the reset target when
  *  the area filter clears. */
-export const DEFAULT_VIEW = { center: [-94.58, 39.1] as [number, number], zoom: 9 }
+export const DEFAULT_VIEW = { center: [-94.58, 39.1] as [number, number], zoom: 8 }
 
 /** Basemap gallery contents, in order — 1.0 parity (its Experience Builder map
  *  widget exposed the stock Esri gallery). These are well-known basemap ids the
@@ -120,7 +139,7 @@ export const HELP = {
     },
   ],
   description:
-    'The Transportation Resilience Explorer supports the Mid-America Regional Council’s Transportation Resilience Phase 2 study, which assesses how the Kansas City region’s roadway network and bridges hold up to flooding and other hazards. This Explorer module browses the study’s data layers — turn layers on, choose which attribute is symbolized, and filter by county or attribute. Stranded-zone and project-scoring modules follow in later phases.',
+    'The Transportation Resilience Explorer supports the Mid-America Regional Council’s Transportation Resilience Phase 2 study, which assesses how the Kansas City region’s roadway network and bridges hold up to flooding and other hazards. This Explorer module browses the study’s data layers — turn layers on, choose which attribute is symbolized, and filter by county or attribute. The Stranded Zones tab opens the flood scenario view: closed segments, cut-off zones and a closure depth to vary. It holds the scenario and closure-depth controls, the headline numbers, the ranked zone list and the CSV and report exports. Project scoring follows in a later phase.',
 }
 
 export const ATTRIBUTION =

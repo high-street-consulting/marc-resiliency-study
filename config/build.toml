@@ -17,12 +17,15 @@ pbf = [
 hpms_gdb = "data/downloads/hpms/hpms_2024.gdb"
 hpms_layers = { KS = "HPMS_FULL_KS_2024", MO = "HPMS_FULL_MO_2024" }
 acs_csv = "data/downloads/acs/acs5_2024_b01001_tracts.csv"
+fema_gdb = "data/downloads/fema/nfhl.gdb"
+# NFHL DFIRM_ID = county GEOID + "C"; the nine MARC counties (KS: Johnson, Leavenworth, Miami, Wyandotte; MO: Cass, Clay, Jackson, Platte, Ray).
+fema_dfirm_ids = ["20091C", "20103C", "20121C", "20209C", "29037C", "29047C", "29095C", "29165C", "29177C"]
 study_area = "Analytical_Inputs/county_boundaries"
 
 [crs]
 # MARC standard: NAD 83 State Plane Missouri West, US feet (WKID 102698).
 # The plan text said 102697, which is Missouri Central. Confirm feet vs meters with MARC GIS.
-wkid = 102698
+wkid = 102698  # Missouri West, US feet: pending MARC GIS confirmation
 
 [osm]
 highway = [
@@ -60,13 +63,21 @@ low_coverage = 0.5
 
 [analysis]
 depth_threshold_ft = 0.5
-# Table with edge_id + flood_depth_ft_<scenario> columns for OSM edges. Not yet delivered (ICF keys on Tier 1 asset_id).
-edge_depth_table = ""
+# Closure depth ladder published with every scenario; depth_threshold_ft must be one of these.
+depth_thresholds_ft = [0.5, 1.0, 1.5, 2.0, 3.0]
+# Table with edge_id + flood_depth_ft_<scenario> columns for OSM edges. fema_closures.py writes the FEMA column;
+# ICF Fathom columns are added to the same table when delivered (ICF currently keys on Tier 1 asset_id).
+edge_depth_table = "build/MARC_Resilience_Phase2_build.gdb/edge_depths"
 centrality_k = 500
+# Baseline single-edge-removal detour for Tier 1 (linked) edges; bounded Dijkstra.
+redundancy_cutoff_mi = 20
 seed = 42
 haz_table = "HAZ_vulnerability_assessment_network"
 # One entry per scenario; the HAZ column is flood_depth_ft_rp<rp>_<year>_<ssp> (year "cur" has no ssp).
+# A scenario may set "name" to override the derived rp<rp>_<year>_<ssp> name; "label" is the display name.
 scenarios = [
+  # Method test (deck section 2.3): every non-bridge OSM edge inside the FEMA 1% floodplain (SFHA) is closed.
+  { name = "fema_1pct", label = "FEMA 1% floodplain (method test)", return_period = 100, year = "cur" },
   { return_period = 100, year = "2050", ssp = "ssp245" },
   { return_period = 100, year = "2070", ssp = "ssp245" },
   { return_period = 100, year = "2050", ssp = "ssp585" },

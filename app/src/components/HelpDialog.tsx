@@ -47,6 +47,7 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
       ref={ref}
       onClose={onClose}
       onCancel={onClose}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
       aria-label="MARC Transportation Resilience Explorer help and information"
       style={{
         width: 'min(720px, 94vw)',

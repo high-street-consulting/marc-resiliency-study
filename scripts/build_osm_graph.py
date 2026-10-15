@@ -2,42 +2,204 @@
 import math
 import os
 import pickle
+import struct
 import sys
+import time
+import zlib
 from collections import Counter
+
+import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import common
 
 FIELDS = [
-    ("edge_id", "TEXT", 40), ("osm_id", "BIGINTEGER", None), ("u", "BIGINTEGER", None),
-    ("v", "BIGINTEGER", None), ("highway", "TEXT", 20), ("ref", "TEXT", 60), ("name", "TEXT", 120),
+    # OSM ids exceed 32 bits; stored as TEXT because Esri's 64-bit integer type is banned (global CLAUDE.md).
+    ("edge_id", "TEXT", 40), ("osm_id", "TEXT", 20), ("u", "TEXT", 20),
+    ("v", "TEXT", 20), ("highway", "TEXT", 20), ("ref", "TEXT", 60), ("name", "TEXT", 120),
     ("oneway", "TEXT", 8), ("bridge", "TEXT", 20), ("layer", "TEXT", 8), ("maxspeed", "TEXT", 20),
     ("length_m", "DOUBLE", None),
 ]
 TAGS = ("highway", "ref", "name", "oneway", "bridge", "layer", "maxspeed")
 
 
-def read_ways(pbf_paths, bbox=None):
-    # Yields (osm_id, tags, [(node_id, lon, lat), ...]) for every way with a highway tag.
-    try:
-        import osmium
-    except ImportError:
-        raise RuntimeError(
-            "No PBF reader with node references in this env: osmnx cannot read PBF, pyrosm is not "
-            "installed, and neither is osmium. Install pyosmium (conda-forge) in a clone of "
-            "arcgispro-py3 and run this step with that clone."
-        )
-    for path in pbf_paths:
-        fp = osmium.FileProcessor(path).with_locations().with_filter(osmium.filter.KeyFilter("highway"))
-        for obj in fp:
-            if not obj.is_way():
-                continue
-            nodes = [(n.ref, n.lon, n.lat) for n in obj.nodes if n.location.valid()]
-            if len(nodes) < 2:
+def read_ways(paths, bbox=None, keep=None):
+    # Yields (osm_id, tags, [(node_id, lon, lat), ...]) for highway ways passing keep(tags), touching bbox.
+    # .pbf: pyosmium when installed, else the stdlib/numpy reader below (Pro env has no osmium).
+    for path in paths:
+        t0 = time.perf_counter()
+        if not path.endswith(".pbf"):
+            raise ValueError(f"unsupported OSM format: {path}")
+        try:
+            import osmium
+            reader = _ways_osmium(osmium, path)
+        except ImportError:
+            reader = _ways_pbf(path, keep)
+        n = 0
+        for osm_id, tags, nodes in reader:
+            if len(nodes) < 2 or (keep and not keep(tags)):
                 continue
             if bbox and not any(bbox[0] <= x <= bbox[2] and bbox[1] <= y <= bbox[3] for _, x, y in nodes):
                 continue
-            yield obj.id, dict(obj.tags), nodes
+            n += 1
+            yield osm_id, tags, nodes
+        print(f"{os.path.basename(path)}: {n} ways in {time.perf_counter() - t0:.0f} s")
+
+
+def _ways_osmium(osmium, path):
+    fp = osmium.FileProcessor(path).with_locations().with_filter(osmium.filter.KeyFilter("highway"))
+    for obj in fp:
+        if obj.is_way():
+            yield obj.id, dict(obj.tags), [(n.ref, n.lon, n.lat) for n in obj.nodes if n.location.valid()]
+
+
+# ---- stdlib + numpy PBF reader: two passes, ways first, then only the nodes they need ----
+
+def _varint(buf, pos):
+    result = shift = 0
+    while True:
+        b = buf[pos]
+        pos += 1
+        result |= (b & 0x7F) << shift
+        if b < 0x80:
+            return result, pos
+        shift += 7
+
+
+def _fields(buf):
+    # Protobuf wire format: yields (field number, value); length-delimited values as memoryview.
+    pos, n = 0, len(buf)
+    while pos < n:
+        key, pos = _varint(buf, pos)
+        wt = key & 7
+        if wt == 0:
+            val, pos = _varint(buf, pos)
+        elif wt == 2:
+            ln, pos = _varint(buf, pos)
+            val, pos = buf[pos:pos + ln], pos + ln
+        elif wt == 1:
+            val, pos = buf[pos:pos + 8], pos + 8
+        elif wt == 5:
+            val, pos = buf[pos:pos + 4], pos + 4
+        else:
+            raise ValueError(f"unsupported wire type {wt}")
+        yield key >> 3, val
+
+
+def _np_varints(buf):
+    a = np.frombuffer(buf, dtype=np.uint8)
+    ends = np.flatnonzero(a < 0x80)
+    if not len(ends):
+        return np.zeros(0, dtype=np.uint64)
+    starts = np.empty_like(ends)
+    starts[0], starts[1:] = 0, ends[:-1] + 1
+    lens = ends - starts + 1
+    out = np.zeros(len(ends), dtype=np.uint64)
+    for k in range(int(lens.max())):
+        m = lens > k
+        out[m] |= (a[starts[m] + k] & 0x7F).astype(np.uint64) << np.uint64(7 * k)
+    return out
+
+
+def _np_sint_delta(buf):
+    u = _np_varints(buf)
+    return np.cumsum((u >> np.uint64(1)).astype(np.int64) ^ -(u & np.uint64(1)).astype(np.int64))
+
+
+def _py_uints(buf):
+    out, pos = [], 0
+    while pos < len(buf):
+        v, pos = _varint(buf, pos)
+        out.append(v)
+    return out
+
+
+def _blocks(path):
+    # Decompressed OSMData PrimitiveBlocks.
+    with open(path, "rb") as f:
+        while True:
+            head = f.read(4)
+            if len(head) < 4:
+                return
+            header = dict(_fields(memoryview(f.read(struct.unpack(">I", head)[0]))))
+            blob = dict(_fields(memoryview(f.read(header[3]))))
+            if bytes(header[1]) != b"OSMData":
+                continue
+            if 1 in blob:
+                yield memoryview(bytes(blob[1]))
+            elif 3 in blob:
+                yield memoryview(zlib.decompress(blob[3]))
+            else:
+                raise ValueError("PBF blob compression other than zlib is not supported")
+
+
+def _block_parts(block):
+    strings, groups, gran, lat_off, lon_off = [], [], 100, 0, 0
+    for fn, val in _fields(block):
+        if fn == 1:
+            strings = [bytes(v).decode("utf-8") for f2, v in _fields(val) if f2 == 1]
+        elif fn == 2:
+            groups.append(val)
+        elif fn == 17:
+            gran = val
+        elif fn == 19:
+            lat_off = val - (1 << 64) if val >= 1 << 63 else val
+        elif fn == 20:
+            lon_off = val - (1 << 64) if val >= 1 << 63 else val
+    return strings, groups, gran, lat_off, lon_off
+
+
+def _ways_pbf(path, keep):
+    ways = []
+    for block in _blocks(path):
+        strings, groups, *_ = _block_parts(block)
+        hw = strings.index("highway") if "highway" in strings else -1
+        if hw < 0:
+            continue
+        for g in groups:
+            for fn, way in _fields(g):
+                if fn != 3:
+                    continue
+                wid, keys, vals, refs = 0, [], [], None
+                for f2, v in _fields(way):
+                    if f2 == 1:
+                        wid = v
+                    elif f2 == 2:
+                        keys = _py_uints(v)
+                    elif f2 == 3:
+                        vals = _py_uints(v)
+                    elif f2 == 8:
+                        refs = v
+                if hw not in keys or refs is None:
+                    continue
+                tags = {strings[k]: strings[x] for k, x in zip(keys, vals)}
+                if keep and not keep(tags):
+                    continue
+                ways.append((wid, tags, _np_sint_delta(refs)))
+    if not ways:
+        return
+    needed = np.unique(np.concatenate([w[2] for w in ways]))
+    lon = np.full(len(needed), np.nan)
+    lat = np.full(len(needed), np.nan)
+    for block in _blocks(path):
+        strings, groups, gran, lat_off, lon_off = _block_parts(block)
+        for g in groups:
+            for fn, dense in _fields(g):
+                if fn == 1:
+                    raise ValueError("non-dense nodes in PBF are not supported")
+                if fn != 2:
+                    continue
+                parts = dict((f2, v) for f2, v in _fields(dense) if f2 in (1, 8, 9))
+                ids = _np_sint_delta(parts[1])
+                idx = np.minimum(np.searchsorted(needed, ids), len(needed) - 1)
+                hit = needed[idx] == ids
+                if hit.any():
+                    lat[idx[hit]] = 1e-9 * (lat_off + gran * _np_sint_delta(parts[8])[hit])
+                    lon[idx[hit]] = 1e-9 * (lon_off + gran * _np_sint_delta(parts[9])[hit])
+    for wid, tags, refs in ways:
+        i = np.searchsorted(needed, refs)
+        ok = ~np.isnan(lon[i])
+        yield wid, tags, list(zip(refs[ok].tolist(), lon[i][ok].tolist(), lat[i][ok].tolist()))
 
 
 def keep_way(tags, cfg):
@@ -116,7 +278,7 @@ def write_edges(edges, out_fc, sr_out, scratch, keep, study_area=None, sr_in=Non
     with arcpy.da.InsertCursor(tmp, ["SHAPE@"] + names) as cur:
         for e in edges:
             line = arcpy.Polyline(arcpy.Array([arcpy.Point(x, y) for x, y in e["coords"]]), sr_in)
-            cur.insertRow([line] + [e[n] for n in names])
+            cur.insertRow([line] + [str(e[n]) if n in ("osm_id", "u", "v") else e[n] for n in names])
     projected = os.path.join(scratch, "osm_edges_projected")
     arcpy.management.Project(tmp, projected, sr_out)
     if study_area:
@@ -169,7 +331,14 @@ def run(cfg=None):
     out_fc = os.path.join(common.ensure_gdb(common.repo_path(cfg["paths"]["build_gdb"])), "osm_edges")
     pkl = common.repo_path(cfg["paths"]["graph_pickle"])
 
-    _, _, bad, share = build_from_ways(read_ways(pbfs, bbox), cfg, out_fc, pkl, scratch, keep, study_area)
+    # Border ways appear in both state extracts: keep the first copy.
+    ways, seen = [], set()
+    for w in read_ways(pbfs, bbox, lambda tags: keep_way(tags, cfg)):
+        if w[0] not in seen:
+            seen.add(w[0])
+            ways.append(w)
+    print(f"ways after cross-state dedupe: {len(ways)}")
+    _, _, bad, share = build_from_ways(ways, cfg, out_fc, pkl, scratch, keep, study_area)
     common.write_metadata(
         out_fc, "OSM analysis network (osm_edges)",
         "Drivable public OSM roads split at every shared node; routable analysis graph for stranded zones, "

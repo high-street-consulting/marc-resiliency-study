@@ -50,13 +50,19 @@ def run(cfg=None):
         for e, v in arcpy.da.SearchCursor(cent, ["edge_id", "centrality"]):
             values.setdefault(e, {})["centrality"] = v
         rules["centrality"] = "mean"
+    red = os.path.join(gdb, "edge_redundancy")
+    if arcpy.Exists(red):
+        for e, d, n in arcpy.da.SearchCursor(red, ["edge_id", "redundancy_detour_mi", "redundancy_no_path"]):
+            values.setdefault(e, {}).update({"redundancy_detour_mi": d, "redundancy_no_path": n})
+        rules.update({"redundancy_detour_mi": "max", "redundancy_no_path": "max"})
     for s in cfg["analysis"]["scenarios"]:
         name = rna.scenario_name(s)
         t = os.path.join(gdb, f"edge_results_{name}")
         if not arcpy.Exists(t):
             print(f"skip {name}: no {t}")
             continue
-        for e, c, st, d in arcpy.da.SearchCursor(t, ["edge_id", "closed", "stranded", "detour_mi"]):
+        for e, c, st, d in arcpy.da.SearchCursor(t, ["edge_id", "closed", "stranded", "detour_mi"],
+                                                 where_clause=f"threshold_ft = {cfg['analysis']['depth_threshold_ft']}"):
             values.setdefault(e, {}).update({f"closed_{name}": c, f"stranded_{name}": st, f"detour_mi_{name}": d})
         rules.update({f"closed_{name}": "max", f"stranded_{name}": "max", f"detour_mi_{name}": "max"})
     agg = results_to_sections(targets, links, values, rules)

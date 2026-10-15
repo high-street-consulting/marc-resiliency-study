@@ -1,7 +1,8 @@
 /**
  * App header styled after marc.org: the four-band stripe, a white bar with the
- * colour MARC logo, the module links as uppercase nav items (only Explore is
- * live), and Share / Help as outline brand buttons. Purely presentational.
+ * colour MARC logo, the module tabs as uppercase nav items (Explore and the
+ * Stranded Zones view), and Help as outline brand
+ * buttons. Purely presentational.
  */
 
 import { Icon } from './icons'
@@ -23,14 +24,16 @@ const headerBtn: React.CSSProperties = {
 }
 
 export function Header({
-  onShare,
-  shareCopied,
+  tab,
+  onTab,
   onHelp,
+  onMethodology,
   vp = 'desktop',
 }: {
-  onShare: () => void
-  shareCopied: boolean
+  tab: 'explore' | 'zones'
+  onTab: (tab: 'explore' | 'zones') => void
   onHelp: () => void
+  onMethodology: () => void
   vp?: 'desktop' | 'tablet' | 'phone'
 }) {
   const phone = vp === 'phone'
@@ -48,7 +51,7 @@ export function Header({
     background: 'transparent',
     color: '#1a1a1a',
   }
-  const soon: React.CSSProperties = { ...navItem, color: '#757575', cursor: 'not-allowed' }
+  const current: React.CSSProperties = { ...navItem, color: 'var(--sc-navy)', borderBottomColor: 'var(--sc-navy)', fontWeight: 700 }
   const hover = (on: boolean) => (e: React.MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.style.background = on ? 'var(--sc-navy)' : 'transparent'
     e.currentTarget.style.color = on ? '#fff' : 'var(--sc-navy)'
@@ -98,18 +101,22 @@ export function Header({
         </a>
         <nav aria-label="Modules" style={{ display: 'flex', marginLeft: phone ? 0 : 8 }}>
           <button
-            aria-current="page"
-            style={{ ...navItem, color: 'var(--sc-navy)', borderBottomColor: 'var(--sc-navy)', fontWeight: 700, cursor: 'default' }}
+            aria-current={tab === 'explore' ? 'page' : undefined}
+            title="Explore the study layers"
+            style={tab === 'explore' ? current : navItem}
+            onClick={() => onTab('explore')}
           >
             Explore
           </button>
           {!phone && (
             <>
-              <button disabled title="Coming in a later phase" style={soon}>
+              <button
+                aria-current={tab === 'zones' ? 'page' : undefined}
+                title="Flood scenario: stranded zones and closed segments"
+                style={tab === 'zones' ? current : navItem}
+                onClick={() => onTab('zones')}
+              >
                 Stranded Zones
-              </button>
-              <button disabled title="Coming in a later phase" style={soon}>
-                Project Scoring
               </button>
             </>
           )}
@@ -118,13 +125,13 @@ export function Header({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
             style={{ ...headerBtn, padding: phone ? '0 9px' : '0 12px' }}
-            onClick={onShare}
-            aria-label={phone ? (shareCopied ? 'Link copied' : 'Share') : undefined}
+            onClick={onMethodology}
+            aria-label={phone ? 'Methodology' : undefined}
             onMouseEnter={hover(true)}
             onMouseLeave={hover(false)}
           >
-            <Icon name="link" />
-            {!phone && (shareCopied ? 'Link copied' : 'Share')}
+            <Icon name="file-report" />
+            {!phone && 'Methodology'}
           </button>
           <button
             style={{ ...headerBtn, padding: phone ? '0 9px' : '0 12px' }}
@@ -136,9 +143,6 @@ export function Header({
             <Icon name="question" />
             {!phone && 'Help'}
           </button>
-        </div>
-        <div aria-live="polite" className="sr-only">
-          {shareCopied ? 'Link copied to the clipboard' : ''}
         </div>
       </header>
     </>

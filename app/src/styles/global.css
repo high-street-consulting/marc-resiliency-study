@@ -385,7 +385,8 @@ dialog::backdrop {
 
 /* Live legend (Esri Legend widget restyled into the design card) */
 .sc-live-legend {
-  max-height: 42vh;
+  flex: 1;
+  min-height: 0;
   max-width: 250px;
   overflow-y: auto;
   overflow-x: hidden;

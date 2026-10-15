@@ -14,6 +14,8 @@ export interface UrlState {
   visible: string[]
   /** Catalog entry id → visible child layer id (the chosen symbology). */
   attrs: Record<string, string>
+  threshold?: number
+  tab?: 'explore' | 'zones'
 }
 
 export function encodeState(s: UrlState): string {
@@ -22,6 +24,8 @@ export function encodeState(s: UrlState): string {
   if (s.visible.length) p.set('on', s.visible.join('|'))
   const attrs = Object.entries(s.attrs)
   if (attrs.length) p.set('sym', attrs.map(([k, v]) => `${k}~${v}`).join('|'))
+  if (s.threshold !== undefined) p.set('thr', String(s.threshold))
+  if (s.tab === 'zones') p.set('tab', s.tab)
   const q = p.toString()
   return q ? '?' + q : ''
 }
@@ -48,5 +52,9 @@ export function decodeState(search: string): Partial<UrlState> {
       if (i > 0) out.attrs[pair.slice(0, i)] = pair.slice(i + 1)
     }
   }
+  const thr = p.get('thr')
+  if (thr && !Number.isNaN(Number(thr))) out.threshold = Number(thr)
+  const tab = p.get('tab')
+  if (tab === 'zones' || tab === 'explore') out.tab = tab
   return out
 }

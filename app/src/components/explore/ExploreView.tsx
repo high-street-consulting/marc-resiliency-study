@@ -12,11 +12,11 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
-import { Icon } from '../icons'
 import { controller } from '../../map/controller'
 import type { CatalogEntry, SelectedFeature } from '../../map/controller'
 import { Catalog } from './Catalog'
 import { DetailSidebar } from './DetailSidebar'
+import { MapLegend } from '../MapLegend'
 
 export function ExploreView(props: {
   vp: 'desktop' | 'tablet' | 'phone'
@@ -24,6 +24,7 @@ export function ExploreView(props: {
   drawerOpen: boolean
   onDrawerOpen: (v: boolean) => void
   layers: CatalogEntry[]
+  areaLabel: string
   loadingLayers: boolean
   layersError: string
   mapError: string
@@ -34,6 +35,7 @@ export function ExploreView(props: {
   onToggleLayer: (id: string, on: boolean) => void
   onClearSelected: () => void
   onOpenTable: (layerId?: string | null) => void
+  onOpenZones?: () => void
 }) {
   const mountRef = useRef<HTMLDivElement>(null)
   const legendRef = useRef<HTMLDivElement>(null)
@@ -92,46 +94,12 @@ export function ExploreView(props: {
               </div>
             </div>
           )}
-          {/* Legend card — reflects the visible layers' actual renderers */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 34,
-              left: 12,
-              background: '#fff',
-              border: '1px solid var(--sc-gray-light)',
-              padding: '10px 11px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 7,
-              boxShadow: 'var(--sc-shadow-card)',
-              minWidth: legendOpen ? 196 : 0,
-              maxWidth: 'min(260px, 70vw)',
-            }}
-          >
-            <button
-              aria-expanded={legendOpen}
-              onClick={() => setLegendOpen((v) => !v)}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left' }}
-            >
-              <span style={{ font: '600 12px/1.2 var(--sc-font)', color: 'var(--sc-text)' }}>Legend</span>
-              <Icon
-                name="chevron-right"
-                size={12}
-                style={{ color: '#555', transform: legendOpen ? 'rotate(90deg)' : 'none' }}
-              />
-            </button>
-            <div ref={legendRef} className="sc-live-legend" style={{ display: legendOpen ? 'block' : 'none' }} />
-            {legendOpen && (
-              <button
-                className="sc-link-btn"
-                style={{ textAlign: 'left' }}
-                onClick={() => props.onOpenTable(props.activeLayerId)}
-              >
-                Attribute table
-              </button>
-            )}
-          </div>
+          <MapLegend
+            legendRef={legendRef}
+            open={legendOpen}
+            onToggle={() => setLegendOpen((v) => !v)}
+            onOpenTable={() => props.onOpenTable(props.activeLayerId)}
+          />
           {narrow && (
             <>
               {drawerOpen && (
@@ -206,6 +174,7 @@ export function ExploreView(props: {
               activeAttrField={selectedAttrField}
               onClose={props.onClearSelected}
               onOpenTable={() => props.onOpenTable(selectedEntry?.id ?? null)}
+              onOpenZones={props.onOpenZones}
             />
           </div>
         ) : (
@@ -214,6 +183,7 @@ export function ExploreView(props: {
             activeAttrField={selectedAttrField}
             onClose={props.onClearSelected}
             onOpenTable={() => props.onOpenTable(selectedEntry?.id ?? null)}
+            onOpenZones={props.onOpenZones}
           />
         ))}
     </>

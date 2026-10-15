@@ -1,0 +1,84 @@
+field,alias
+data_source,Data source
+framework_role,Framework role
+source_note,Source note
+edge_id,Edge ID
+osm_id,OSM way ID
+u,From node
+v,To node
+highway,OSM highway class
+ref,Route reference
+name,Road name
+oneway,One-way
+bridge,Bridge
+layer,Layer (OSM)
+maxspeed,Max speed (OSM)
+length_m,Length (m)
+lrs_route_id,HPMS route ID
+lrs_from_m,HPMS from measure (mi)
+lrs_to_m,HPMS to measure (mi)
+lrs_match_quality,HPMS match quality
+lrs_match_method,HPMS match method
+asset_id,Asset ID
+route_id,Route ID
+state,State
+begin_point,Begin point (mi)
+end_point,End point (mi)
+length_mi,Length (mi)
+f_system,Functional class (HPMS)
+aadt,AADT
+nhs,NHS
+through_lanes,Through lanes
+facility_type,Facility type
+ownership,Ownership
+urban_id,Urban area ID
+routenumber,Route number
+routesigning,Route signing
+nhfn,NHFN
+iri,IRI
+speed_limit,Speed limit
+psr,PSR
+cracking_percent,Cracking (%)
+aadt_kdot_county,AADT (KDOT county counts)
+nhfn_code,NHFN code (NTAD)
+pav_cond_kdot,Pavement condition (KDOT)
+nbi_min_cond,Lowest bridge condition (NBI)
+pav_cond_modot,Pavement condition (MoDOT)
+pci_ug,Pavement condition index (Unified Government)
+paser_shawnee,PASER rating (Shawnee)
+low_coverage,Low coverage flags
+centrality,Betweenness centrality
+redundancy_detour_mi,Detour if this segment is lost (mi)
+redundancy_no_path,No alternative within 20 mi (1 = flag)
+NAME,County
+GEOID,GEOID
+STRUCTURE_NUMBER_008,Structure number
+FACILITY_CARRIED_007,Facility carried
+FEATURES_DESC_006A,Features intersected
+LOCATION_009,Location
+OWNER_022,Owner
+MAINTENANCE_021,Maintenance responsibility
+FUNCTIONAL_CLASS_026,Functional class
+YEAR_BUILT_027,Year built
+YEAR_RECONSTRUCTED_106,Year reconstructed
+ADT_029,ADT
+YEAR_ADT_030,ADT year
+PERCENT_ADT_TRUCK_109,Truck ADT (%)
+DETOUR_KILOS_019,Detour length (km)
+STRUCTURE_LEN_MT_049,Structure length (m)
+DECK_WIDTH_MT_052,Deck width (m)
+MAIN_UNIT_SPANS_045,Main spans
+DECK_COND_058,Deck condition
+SUPERSTRUCTURE_COND_059,Superstructure condition
+SUBSTRUCTURE_COND_060,Substructure condition
+CHANNEL_COND_061,Channel condition
+CULVERT_COND_062,Culvert condition
+BRIDGE_CONDITION,Bridge condition
+LOWEST_RATING,Lowest rating
+SCOUR_CRITICAL_113,Scour critical
+OPEN_CLOSED_POSTED_041,Open / closed / posted
+STRUCTURAL_EVAL_067,Structural evaluation
+WATERWAY_EVAL_071,Waterway adequacy
+DATE_OF_INSPECT_090,Last inspection
+DECK_AREA,Deck area
+STATUS,Status

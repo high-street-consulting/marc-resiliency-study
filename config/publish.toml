@@ -11,32 +11,55 @@ credits = "Mid-America Regional Council (MARC) Transportation Resilience Phase 2
 access = "MARC project data. Contact MARC GIS for use outside the project."
 
 [[services]]
-name = "MARC_Resilience_Phase2_Network"
-summary = "MARC Transportation Resilience Phase 2 road networks and NBI bridges."
-description = "Stranded zone network (OSM analysis graph), vulnerability assessment network (Tier 1 scored network) and National Bridge Inventory bridges for the MARC Transportation Resilience Phase 2 study."
+name = "draft_MARC_Resiliency_Study"
+# Existing hosted item; publish_agol.py overwrites it, build_webmap.py reads it by id.
+item_id = "330e5db95b8b442daf72f30be42b0d94"
+summary = "MARC Transportation Resilience Phase 2 road networks, NBI bridges and county boundaries."
+description = "Stranded zone network (OSM analysis graph), vulnerability assessment network (Tier 1 scored network with baseline redundancy and centrality), National Bridge Inventory bridges and county boundaries for the MARC Transportation Resilience Phase 2 study."
 tags = ["MARC", "resilience", "transportation"]
 # Default symbology source; layers are matched to it by display name. A layer may set its own lyrx.
 lyrx = "data/OneDrive_1_10-13-2026/MARC_Resilience_Phase2_gdb/MARC_Resilience_Phase2.lyrx"
 layers = [
-  { path = "data/OneDrive_1_10-13-2026/MARC_Resilience_Phase2_gdb/MARC_Resilience_Phase2.gdb/Stranded_Zone_Network/stranded_zone_network", name = "Stranded zone network" },
-  { path = "data/OneDrive_1_10-13-2026/MARC_Resilience_Phase2_gdb/MARC_Resilience_Phase2.gdb/Tier1_Assets/vulnerability_assessment_network", name = "Vulnerability assessment network" },
-  { path = "data/OneDrive_1_10-13-2026/MARC_Resilience_Phase2_gdb/MARC_Resilience_Phase2.gdb/Tier1_Assets/bridges_nbi", name = "Bridges (NBI)" },
+  { path = "build/MARC_Resilience_Phase2.gdb/Stranded_Zone_Network/stranded_zone_network", name = "Stranded zone network" },
+  { path = "build/MARC_Resilience_Phase2.gdb/Tier1_Assets/vulnerability_assessment_network", name = "Vulnerability assessment network", lyrx = "" },  # delivered lyrx styles by road_type, gone from the HPMS sections
+  { path = "build/MARC_Resilience_Phase2.gdb/Tier1_Assets/bridges_nbi", name = "Bridges (NBI)" },
+  { path = "build/MARC_Resilience_Phase2.gdb/Analytical_Inputs/county_boundaries", name = "Counties" },
 ]
 
 [[services]]
-name = "MARC_Resilience_Phase2_Reference"
-summary = "MARC region county boundaries."
-description = "County boundaries for the MARC Transportation Resilience Phase 2 study."
-tags = ["MARC", "resilience", "boundaries"]
-layers = [ { path = "data/OneDrive_1_10-13-2026/MARC_Resilience_Phase2_gdb/MARC_Resilience_Phase2.gdb/Analytical_Inputs/county_boundaries", name = "Counties" } ]
+name = "draft_MARC_Resiliency_Scenarios"
+item_id = "e05532acd08148188123dfda36d72303"
+# Published from a zipped FGDB (publish_agol.py --fgdb): layer names are the feature class names.
+# Set item_id after the first publish so later runs overwrite instead of creating a second service.
+method = "fgdb"
+summary = "MARC Transportation Resilience Phase 2 flood scenario results on the OSM analysis graph."
+description = "Per scenario: closed edges, stranded and single-egress zones, and detour paths from scripts/run_network_analysis.py. fema_1pct is the FEMA 1% floodplain method test (bridges exempt), not a Fathom scenario."
+tags = ["MARC", "resilience", "scenario"]
+layers = [
+  { path = "build/MARC_Resilience_Phase2_build.gdb/closed_edges_fema_1pct", name = "closed_edges_fema_1pct" },
+  { path = "build/MARC_Resilience_Phase2_build.gdb/stranded_zones_fema_1pct", name = "stranded_zones_fema_1pct" },
+  { path = "build/MARC_Resilience_Phase2_build.gdb/detours_fema_1pct", name = "detours_fema_1pct" },
+]
 
 [webmap]
-title = "MARC Resilience Explorer"
+title = "draft MARC Resiliency Study"
+# Existing web map, updated in place: https://arcgis.com/apps/mapviewer/index.html?webmap=add2eb6e2be245799fce315c5129913a
+item_id = "add2eb6e2be245799fce315c5129913a"
 basemap = "gray-vector"
 sharing = "everyone"
-# section = group layer in the app catalog; entries are layer display names from [[services]]
+# section = group layer in the app catalog, listed top-down; entries are layer display names
+# from [[services]] or [[webmap.external]]. Symbology per layer lives in build_webmap.STYLES.
 sections = [
-  { name = "Networks",  layers = ["Vulnerability assessment network", "Stranded zone network"] },
   { name = "Assets",    layers = ["Bridges (NBI)"] },
+  # Scenario rows: one exclusive group per measure, one option per scenario in config/build.toml (build_webmap.scenario_styles).
+  { name = "Scenarios", layers = ["Stranded zones", "Closed segments", "Detour paths"] },
+  { name = "Networks",  layers = ["Vulnerability assessment network", "Stranded zone network"] },
+  { name = "Hazards",   layers = ["FEMA flood hazard areas"] },
   { name = "Reference", layers = ["Counties"] },
 ]
+
+# Layers from items outside this project (Living Atlas).
+[[webmap.external]]
+name = "FEMA flood hazard areas"
+item_id = "ccd29fb4bd5e4b44a2d61638829a5d7e"  # USA Flood Hazard Areas (FEMA NFHL, Esri Living Atlas; the "Reduced Set" item is deprecated)
+url = "https://services5.arcgis.com/7weheFjxuNkGGiZi/arcgis/rest/services/USA_Flood_Hazard_Areas_view/FeatureServer/0"
